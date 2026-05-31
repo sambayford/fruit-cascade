@@ -1,12 +1,12 @@
 {
-  "name": "Jewel Cascade",
-  "short_name": "Jewel Cascade",
-  "description": "A sparkling match-3 jewel puzzle game",
+  "name": "Fruit Cascade",
+  "short_name": "Fruit Cascade",
+  "description": "A juicy match-3 fruit puzzle game",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0d0a1a",
-  "theme_color": "#0d0a1a",
+  "background_color": "#0a1a0d",
+  "theme_color": "#0a1a0d",
   "icons": [
     {
       "src": "icon-192.png",

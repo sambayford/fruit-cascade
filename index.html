@@ -4,18 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0d0a1a">
-  <meta name="description" content="Jewel Cascade — a sparkling match-3 gem puzzle game">
+  <meta name="description" content="Fruit Cascade — a juicy match-3 fruit puzzle game">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Jewel Cascade">
+  <meta name="apple-mobile-web-app-title" content="Fruit Cascade">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <title>Jewel Cascade</title>
+  <title>Fruit Cascade</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-deep:   #0d0a1a;
-      --bg-mid:    #130e28;
+      --bg-deep:   #0a1a0d;
+      --bg-mid:    #0e2813;
       --bg-panel:  rgba(255,255,255,0.04);
       --border:    rgba(255,255,255,0.08);
       --gold:      #f0c060;
@@ -77,9 +77,9 @@
       position: fixed;
       inset: 0;
       background:
-        radial-gradient(ellipse 40% 30% at 15% 20%, rgba(191,90,242,0.12) 0%, transparent 70%),
-        radial-gradient(ellipse 35% 40% at 85% 70%, rgba(10,132,255,0.10) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 25% at 50% 90%, rgba(255,45,85,0.08) 0%, transparent 70%);
+        radial-gradient(ellipse 40% 30% at 15% 20%, rgba(58,140,0,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 35% 40% at 85% 70%, rgba(232,93,0,0.10) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 25% at 50% 90%, rgba(230,200,0,0.08) 0%, transparent 70%);
       pointer-events: none;
       z-index: 0;
     }
@@ -162,7 +162,7 @@
     .progress-fill {
       height: 100%;
       border-radius: 3px;
-      background: linear-gradient(90deg, var(--sapphire), var(--amethyst), var(--ruby));
+      background: linear-gradient(90deg, #e85d00, #e6c800, #3a8c00, #e8002d);
       background-size: 200% 100%;
       transition: width 0.4s ease;
       animation: shimmer 2s linear infinite;
@@ -182,7 +182,7 @@
       grid-template-rows: repeat(8, var(--cell));
       gap: var(--gap);
       padding: var(--gap);
-      background: rgba(0,0,0,0.35);
+      background: rgba(0,0,0,0.20);
       border: 1px solid var(--border);
       border-radius: 16px;
       backdrop-filter: blur(12px);
@@ -203,59 +203,37 @@
       user-select: none;
       -webkit-user-select: none;
     }
-    .cell.empty { background: rgba(255,255,255,0.03); }
+    .cell.empty { background: transparent; }
 
-    /* Jewel gem */
+    /* Fruit */
     .gem {
       width: 52px;
       height: 52px;
-      border-radius: 8px;
       position: relative;
       transition: transform 0.15s ease, filter 0.15s ease;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 26px;
+      font-size: 38px;
+      background: none;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
     }
 
-    .gem::before {
-      content: '';
-      position: absolute;
-      inset: 2px;
-      border-radius: 6px;
-      opacity: 0.35;
-      background: linear-gradient(135deg, rgba(255,255,255,0.6) 0%, transparent 60%);
-      pointer-events: none;
-    }
-    .gem::after {
-      content: '';
-      position: absolute;
-      top: 3px; left: 6px;
-      width: 40%; height: 25%;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.5);
-      filter: blur(2px);
-      pointer-events: none;
-    }
+    .gem::before { display: none; }
+    .gem::after  { display: none; }
 
-    /* Gem colors */
-    .gem-0 { background: radial-gradient(circle at 35% 35%, #ff6680, var(--ruby)); box-shadow: 0 0 10px rgba(255,45,85,0.5), inset 0 0 8px rgba(255,100,120,0.4); }
-    .gem-1 { background: radial-gradient(circle at 35% 35%, #40aaff, var(--sapphire)); box-shadow: 0 0 10px rgba(10,132,255,0.5), inset 0 0 8px rgba(80,160,255,0.4); }
-    .gem-2 { background: radial-gradient(circle at 35% 35%, #60e880, var(--emerald)); box-shadow: 0 0 10px rgba(48,209,88,0.5), inset 0 0 8px rgba(100,230,130,0.4); }
-    .gem-3 { background: radial-gradient(circle at 35% 35%, #d080ff, var(--amethyst)); box-shadow: 0 0 10px rgba(191,90,242,0.5), inset 0 0 8px rgba(200,130,255,0.4); }
-    .gem-4 { background: radial-gradient(circle at 35% 35%, #ffe055, var(--topaz)); box-shadow: 0 0 10px rgba(255,214,10,0.5), inset 0 0 8px rgba(255,230,80,0.4); }
-    .gem-5 { background: radial-gradient(circle at 35% 35%, #a0eeff, var(--diamond)); box-shadow: 0 0 10px rgba(100,210,255,0.5), inset 0 0 8px rgba(160,238,255,0.4); }
-    .gem-6 { background: radial-gradient(circle at 35% 35%, #ff9060, var(--garnet)); box-shadow: 0 0 10px rgba(255,107,53,0.5), inset 0 0 8px rgba(255,150,90,0.4); }
+    /* No per-fruit backgrounds needed — emoji only */
+    .gem-0,.gem-1,.gem-2,.gem-3,.gem-4,.gem-5,.gem-6 { background: none; box-shadow: none; }
 
     /* Selected */
     .cell.selected .gem {
-      transform: scale(1.12);
-      filter: brightness(1.3);
+      transform: scale(1.18);
       animation: pulse-sel 0.6s ease-in-out infinite alternate;
     }
     @keyframes pulse-sel {
-      from { box-shadow: inherit; }
-      to   { box-shadow: 0 0 20px currentColor, 0 0 40px currentColor; }
+      from { filter: drop-shadow(0 0 4px rgba(255,220,80,0.6)); }
+      to   { filter: drop-shadow(0 0 14px rgba(255,220,80,1)) drop-shadow(0 0 6px rgba(255,255,255,0.8)); }
     }
 
     /* Match flash */
@@ -277,15 +255,25 @@
       to   { transform: translateY(0) scale(1); opacity: 1; }
     }
 
-    /* Swap animation */
-    .cell.swap-right .gem { animation: swap-r 0.2s ease forwards; }
-    .cell.swap-left  .gem { animation: swap-l 0.2s ease forwards; }
-    .cell.swap-down  .gem { animation: swap-d 0.2s ease forwards; }
-    .cell.swap-up    .gem { animation: swap-u 0.2s ease forwards; }
-    @keyframes swap-r { 0%{transform:translateX(0)} 50%{transform:translateX(calc(var(--cell) + var(--gap)))} 100%{transform:translateX(0)} }
-    @keyframes swap-l { 0%{transform:translateX(0)} 50%{transform:translateX(calc(-1*(var(--cell) + var(--gap))))} 100%{transform:translateX(0)} }
-    @keyframes swap-d { 0%{transform:translateY(0)} 50%{transform:translateY(calc(var(--cell) + var(--gap)))} 100%{transform:translateY(0)} }
-    @keyframes swap-u { 0%{transform:translateY(0)} 50%{transform:translateY(calc(-1*(var(--cell) + var(--gap))))} 100%{transform:translateY(0)} }
+    /* Swap animation — one-way slide, held at destination */
+    .cell.swap-right .gem { animation: slide-r 0.18s ease forwards; }
+    .cell.swap-left  .gem { animation: slide-l 0.18s ease forwards; }
+    .cell.swap-down  .gem { animation: slide-d 0.18s ease forwards; }
+    .cell.swap-up    .gem { animation: slide-u 0.18s ease forwards; }
+    @keyframes slide-r { from{transform:translateX(0)} to{transform:translateX(calc(var(--cell) + var(--gap)))} }
+    @keyframes slide-l { from{transform:translateX(0)} to{transform:translateX(calc(-1*(var(--cell) + var(--gap))))} }
+    @keyframes slide-d { from{transform:translateY(0)} to{transform:translateY(calc(var(--cell) + var(--gap)))} }
+    @keyframes slide-u { from{transform:translateY(0)} to{transform:translateY(calc(-1*(var(--cell) + var(--gap))))} }
+
+    /* Bounce-back for invalid swaps only */
+    .cell.bounce-right .gem { animation: bounce-r 0.30s ease forwards; }
+    .cell.bounce-left  .gem { animation: bounce-l 0.30s ease forwards; }
+    .cell.bounce-down  .gem { animation: bounce-d 0.30s ease forwards; }
+    .cell.bounce-up    .gem { animation: bounce-u 0.30s ease forwards; }
+    @keyframes bounce-r { 0%{transform:translateX(0)} 40%{transform:translateX(calc((var(--cell) + var(--gap))*0.5))} 100%{transform:translateX(0)} }
+    @keyframes bounce-l { 0%{transform:translateX(0)} 40%{transform:translateX(calc(-1*(var(--cell) + var(--gap))*0.5))} 100%{transform:translateX(0)} }
+    @keyframes bounce-d { 0%{transform:translateY(0)} 40%{transform:translateY(calc((var(--cell) + var(--gap))*0.5))} 100%{transform:translateY(0)} }
+    @keyframes bounce-u { 0%{transform:translateY(0)} 40%{transform:translateY(calc(-1*(var(--cell) + var(--gap))*0.5))} 100%{transform:translateY(0)} }
 
     /* Hint pulse */
     .cell.hint .gem { animation: hint-pulse 0.8s ease-in-out 3; }
@@ -417,20 +405,20 @@
     /* Mobile scale */
     @media (max-width: 420px) {
       :root { --cell: 42px; --gap: 3px; }
-      .gem { width: 36px; height: 36px; font-size: 18px; }
+      .gem { width: 36px; height: 36px; font-size: 26px; }
       .gem::after { display: none; }
     }
     @media (max-width: 360px) {
       :root { --cell: 38px; --gap: 2px; }
-      .gem { width: 33px; height: 33px; font-size: 16px; }
+      .gem { width: 33px; height: 33px; font-size: 23px; }
     }
   </style>
 </head>
 <body>
 <div id="app">
   <header>
-    <h1>Jewel Cascade</h1>
-    <p>Match · Cascade · Conquer</p>
+    <h1>Fruit Cascade</h1>
+    <p>Match · Splash · Munch</p>
   </header>
 
   <div class="stats">
@@ -480,7 +468,7 @@
 <script>
 const COLS = 8, ROWS = 8;
 const GEM_TYPES = 7;
-const GEM_EMOJI = ['💎','🔷','💚','💜','💛','🔹','🔶'];
+const GEM_EMOJI = ['🍓','🍇','🍏','🍋','🍊','🍒','🍉'];
 
 let board = [], score = 0, level = 1, moves = 30, target = 500;
 let selected = null, hints = 3, busy = false;
@@ -671,25 +659,32 @@ async function trySwap(r1, c1, r2, c2) {
   if (busy) return;
   busy = true;
 
-  // Animate swap
   const dir1 = r1===r2 ? (c2>c1?'right':'left') : (r2>r1?'down':'up');
   const dir2 = r1===r2 ? (c2>c1?'left':'right') : (r2>r1?'up':'down');
-  getCell(r1,c1).classList.add('swap-'+dir1);
-  getCell(r2,c2).classList.add('swap-'+dir2);
-  await delay(220);
 
+  // Check validity BEFORE animating
   swap(r1,c1,r2,c2);
   const matches = findMatches();
 
   if (!matches.length) {
-    // Undo
+    // Invalid — undo data immediately, show subtle bounce
     swap(r1,c1,r2,c2);
-    render();
+    getCell(r1,c1).classList.add('bounce-'+dir1);
+    getCell(r2,c2).classList.add('bounce-'+dir2);
+    await delay(320);
+    getCell(r1,c1).classList.remove('bounce-'+dir1);
+    getCell(r2,c2).classList.remove('bounce-'+dir2);
     busy = false;
     return;
   }
 
+  // Valid — animate the one-way slide, then immediately re-render with swapped data
+  getCell(r1,c1).classList.add('swap-'+dir1);
+  getCell(r2,c2).classList.add('swap-'+dir2);
+  await delay(190);
+
   moves--;
+  render(); // redraws board with swapped positions — no snap-back
   await processCascade(matches, 1);
   render();
 
