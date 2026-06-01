@@ -492,6 +492,103 @@
       100% { opacity: 0; transform: translateY(-8px); }
     }
 
+
+    /* Special fruit */
+    .gem.striped-h::after, .gem.striped-v::after { display: block; }
+    .gem.striped-h {
+      position: relative;
+    }
+    .gem.striped-h::after {
+      content: '↔';
+      position: absolute;
+      bottom: -4px; right: -2px;
+      font-size: 11px;
+      line-height: 1;
+      background: rgba(0,0,0,0.55);
+      border-radius: 4px;
+      padding: 0 2px;
+      color: #fff;
+      pointer-events: none;
+    }
+    .gem.striped-v {
+      position: relative;
+    }
+    .gem.striped-v::after {
+      content: '↕';
+      position: absolute;
+      bottom: -4px; right: -2px;
+      font-size: 11px;
+      line-height: 1;
+      background: rgba(0,0,0,0.55);
+      border-radius: 4px;
+      padding: 0 2px;
+      color: #fff;
+      pointer-events: none;
+    }
+    .gem.bomb {
+      position: relative;
+    }
+    .gem.bomb::after {
+      content: '💥';
+      position: absolute;
+      bottom: -6px; right: -4px;
+      font-size: 13px;
+      line-height: 1;
+      pointer-events: none;
+      display: block;
+    }
+    /* Special fruit flash — brighter */
+    .cell.matching-special .gem {
+      animation: flash-special 0.4s ease forwards;
+    }
+    @keyframes flash-special {
+      0%   { transform: scale(1); opacity: 1; }
+      30%  { transform: scale(1.5); filter: brightness(3) saturate(2); opacity: 1; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+
+
+    /* Combo counter */
+    #combo-display {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 50;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    #combo-display.show {
+      opacity: 1;
+    }
+    #combo-display .combo-x {
+      font-family: 'Cinzel Decorative', cursive;
+      font-size: clamp(2.5rem, 12vw, 4rem);
+      font-weight: 900;
+      line-height: 1;
+      background: linear-gradient(135deg, #fff176, #ffd600, #ff6f00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 16px rgba(255,200,0,0.8));
+      animation: combo-pop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    #combo-display .combo-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+    @keyframes combo-pop {
+      from { transform: scale(0.4); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
   </style>
 </head>
 <body>
@@ -526,6 +623,7 @@
 
   <div id="board-wrap">
     <div id="board"></div>
+    <div id="combo-display"></div>
   </div>
 
   <div id="monkey-wrap">
@@ -561,8 +659,10 @@ const SAVE_KEY = 'fruitCascade_save';
 const HI_KEY   = 'fruitCascade_hi';
 
 let board = [];
+let special = []; // parallel board: null | 'striped-h' | 'striped-v' | 'bomb'
 let score = 0, level = 1, moves = 30, target = 2000, hiScore = 0, hints = 3;
 let selected = null, busy = false, touchStart = null;
+let comboTimer = null;
 
 const boardEl   = document.getElementById('board');
 const scoreEl   = document.getElementById('score-val');
@@ -581,11 +681,12 @@ function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 // ── Board ──────────────────────────────────────────────────────────────────
 
 function newBoard() {
-  board = [];
+  board = []; special = [];
   for (let r = 0; r < ROWS; r++) {
-    board[r] = [];
+    board[r] = []; special[r] = [];
     for (let c = 0; c < COLS; c++) {
       board[r][c] = safePick(r, c);
+      special[r][c] = null;
     }
   }
 }
@@ -603,11 +704,16 @@ function swapCells(r1, c1, r2, c2) {
   const tmp = board[r1][c1];
   board[r1][c1] = board[r2][c2];
   board[r2][c2] = tmp;
+  const ts = special[r1][c1];
+  special[r1][c1] = special[r2][c2];
+  special[r2][c2] = ts;
 }
 
-function getMatches() {
-  const hits = new Set();
-  // Horizontal
+// Returns {cells, type, dir, pivot} per match-group, plus flat cell list
+function getMatchGroups() {
+  const groups = [];
+  const counted = new Set();
+  // Horizontal groups
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS - 2; c++) {
       const g = board[r][c];
@@ -615,12 +721,14 @@ function getMatches() {
       if (g === board[r][c+1] && g === board[r][c+2]) {
         let len = 3;
         while (c + len < COLS && board[r][c+len] === g) len++;
-        for (let i = 0; i < len; i++) hits.add(r * COLS + c + i);
+        const cells = [];
+        for (let i = 0; i < len; i++) cells.push([r, c+i]);
+        groups.push({ cells, len, dir: 'h', pivot: [r, c + Math.floor(len/2)], gemType: g });
         c += len - 1;
       }
     }
   }
-  // Vertical
+  // Vertical groups
   for (let c = 0; c < COLS; c++) {
     for (let r = 0; r < ROWS - 2; r++) {
       const g = board[r][c];
@@ -628,12 +736,22 @@ function getMatches() {
       if (g === board[r+1][c] && g === board[r+2][c]) {
         let len = 3;
         while (r + len < ROWS && board[r+len][c] === g) len++;
-        for (let i = 0; i < len; i++) hits.add((r+i) * COLS + c);
+        const cells = [];
+        for (let i = 0; i < len; i++) cells.push([r+i, c]);
+        groups.push({ cells, len, dir: 'v', pivot: [r + Math.floor(len/2), c], gemType: g });
         r += len - 1;
       }
     }
   }
-  return [...hits].map(idx => [Math.floor(idx / COLS), idx % COLS]);
+  // Flat unique cell list
+  const hitSet = new Set();
+  for (const g of groups) for (const [r,c] of g.cells) hitSet.add(r*COLS+c);
+  const allCells = [...hitSet].map(idx => [Math.floor(idx/COLS), idx%COLS]);
+  return { groups, allCells };
+}
+
+function getMatches() {
+  return getMatchGroups().allCells;
 }
 
 function hasValidMove() {
@@ -699,19 +817,20 @@ function safeRandom(r, c) {
 function dropAndFill() {
   const newCells = new Set();
   for (let c = 0; c < COLS; c++) {
-    // Compact downward
+    // Compact downward (carry specials with their fruit)
     let empty = ROWS - 1;
     for (let r = ROWS - 1; r >= 0; r--) {
       if (board[r][c] !== null) {
-        board[empty][c] = board[r][c];
-        if (empty !== r) board[r][c] = null;
+        board[empty][c]   = board[r][c];
+        special[empty][c] = special[r][c];
+        if (empty !== r) { board[r][c] = null; special[r][c] = null; }
         empty--;
       }
     }
-    // Fill top with match-safe gems (fill top-to-bottom so each cell can
-    // see the ones above it already placed)
+    // Fill top
     for (let r = 0; r <= empty; r++) {
-      board[r][c] = safeRandom(r, c);
+      board[r][c]   = safeRandom(r, c);
+      special[r][c] = null;
       newCells.add(r * COLS + c);
     }
   }
@@ -735,6 +854,7 @@ function render(newCells = new Set()) {
         const gem = document.createElement('div');
         gem.className = 'gem gem-' + g;
         gem.textContent = GEM_EMOJI[g];
+        if (special[r] && special[r][c]) gem.classList.add(special[r][c]);
         if (newCells.has(r * COLS + c)) div.classList.add('drop-in');
         div.appendChild(gem);
       } else {
@@ -758,37 +878,117 @@ function updateUI() {
   progEl.style.width   = Math.min(100, (score / target) * 100) + '%';
 }
 
+// ── Combo display ──────────────────────────────────────────────────────────
+
+function showCombo(n) {
+  const el = document.getElementById('combo-display');
+  el.innerHTML = `<div class="combo-x">×${n}</div><div class="combo-label">Combo!</div>`;
+  // Force reflow to restart animation
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  if (comboTimer) clearTimeout(comboTimer);
+  comboTimer = setTimeout(() => el.classList.remove('show'), 900);
+}
+
+function hideCombo() {
+  if (comboTimer) clearTimeout(comboTimer);
+  document.getElementById('combo-display').classList.remove('show');
+}
+
 // ── Cascade ────────────────────────────────────────────────────────────────
 
+// Collect all cells to clear, respecting special effects (chain reaction)
+function collectClear(initialCells) {
+  const toNull = new Set();
+  const queue = [...initialCells];
+  while (queue.length) {
+    const [r, c] = queue.shift();
+    const key = r * COLS + c;
+    if (toNull.has(key)) continue;
+    toNull.add(key);
+    const sp = special[r] && special[r][c];
+    if (sp === 'striped-h') {
+      // clear whole row
+      for (let cc = 0; cc < COLS; cc++) queue.push([r, cc]);
+    } else if (sp === 'striped-v') {
+      // clear whole column
+      for (let rr = 0; rr < ROWS; rr++) queue.push([rr, c]);
+    } else if (sp === 'bomb') {
+      // clear 3x3
+      for (let dr = -1; dr <= 1; dr++)
+        for (let dc = -1; dc <= 1; dc++)
+          if (r+dr >= 0 && r+dr < ROWS && c+dc >= 0 && c+dc < COLS)
+            queue.push([r+dr, c+dc]);
+    }
+  }
+  return [...toNull].map(idx => [Math.floor(idx/COLS), idx%COLS]);
+}
+
 async function cascade(combo) {
-  const matches = getMatches();
-  if (!matches.length) return;
+  const { groups, allCells } = getMatchGroups();
+  if (!allCells.length) return;
 
-  // Mark all matched cells in the DOM simultaneously, then wait for the
-  // full flash animation before touching the board data or re-rendering.
-  matches.forEach(([r, c]) => cell(r, c)?.classList.add('matching'));
-  await delay(420); // long enough for flash-match (0.3s) to fully complete
+  // Determine which cells to clear (including special chain reactions)
+  const clearCells = collectClear(allCells);
+  const clearSet = new Set(clearCells.map(([r,c]) => r*COLS+c));
 
-  // Score
-  const pts = matches.length * 20 * combo;
+  // Determine where to place special fruit (before clearing)
+  const newSpecials = []; // [{r,c,kind,gemType}]
+  for (const grp of groups) {
+    const { len, dir, pivot, gemType } = grp;
+    // Only create specials from plain (non-special) matches
+    const hasSpecialInGroup = grp.cells.some(([r,c]) => special[r][c]);
+    if (!hasSpecialInGroup) {
+      if (len === 4) {
+        // Striped: direction perpendicular to match direction
+        newSpecials.push({ r: pivot[0], c: pivot[1], kind: dir === 'h' ? 'striped-v' : 'striped-h', gemType });
+      } else if (len >= 5) {
+        newSpecials.push({ r: pivot[0], c: pivot[1], kind: 'bomb', gemType });
+      }
+    }
+  }
+
+  // Flash
+  clearCells.forEach(([r, c]) => {
+    const el = cell(r, c);
+    if (!el) return;
+    el.classList.add(special[r][c] ? 'matching-special' : 'matching');
+  });
+  await delay(420);
+
+  // Score — specials score more, combos multiply
+  let basePts = 0;
+  clearCells.forEach(([r,c]) => {
+    const sp = special[r][c];
+    basePts += sp ? 60 : 20;
+  });
+  const multiplier = combo; // ×1 for first match, ×2 for cascade, etc.
+  const pts = basePts * multiplier;
   score += pts;
-  showScorePop(matches[0], pts);
+  showScorePop(allCells[0], pts, multiplier);
+  if (combo >= 2) showCombo(combo);
   updateUI();
-  monkeyEat(matches, combo);
+  monkeyEat(allCells, combo);
 
-  // Remove from board data only after animation is done
-  matches.forEach(([r, c]) => { board[r][c] = null; });
+  // Clear from data
+  clearCells.forEach(([r, c]) => { board[r][c] = null; special[r][c] = null; });
 
-  // Render the gaps (nulls show as empty cells) so player sees them clear
+  // Place new specials (only if pivot cell was cleared and not already special)
+  for (const { r, c, kind, gemType } of newSpecials) {
+    if (board[r][c] === null) { // was cleared
+      board[r][c]   = gemType;
+      special[r][c] = kind;
+    }
+  }
+
   render();
   await delay(80);
 
-  // Drop existing fruit down and fill top with new fruit
   const fresh = dropAndFill();
   render(fresh);
   await delay(400);
 
-  // Check for cascade
   await cascade(combo + 1);
 }
 
@@ -833,14 +1033,14 @@ function monkeyEat(matches, combo) {
   }, 1000);
 }
 
-function showScorePop([r, c], pts) {
+function showScorePop([r, c], pts, multiplier = 1) {
   const el = cell(r, c);
   if (!el) return;
   const bRect = boardEl.getBoundingClientRect();
   const cRect = el.getBoundingClientRect();
   const pop = document.createElement('div');
   pop.className = 'score-pop';
-  pop.textContent = '+' + pts;
+  pop.textContent = '+' + pts + (multiplier >= 2 ? ' ×' + multiplier : '');
   pop.style.left = (cRect.left - bRect.left + cRect.width / 2) + 'px';
   pop.style.top  = (cRect.top  - bRect.top) + 'px';
   boardEl.style.position = 'relative';
@@ -929,6 +1129,7 @@ async function trySwap(r1, c1, r2, c2) {
   render();           // board now shows swapped state
   await cascade(1);   // finds & clears matches, drops, fills, repeats
 
+  hideCombo();
   if (!hasValidMove()) { shuffleBoard(); render(); }
 
   saveGame();
@@ -1008,7 +1209,8 @@ function nextLevel() {
   target = Math.round(target * 2.0);
   moves  = 30 + Math.min(level * 2, 20);
   hints  = 3;
-  newBoard();
+  // Keep the existing board — only shuffle if no valid moves remain
+  if (!hasValidMove()) { shuffleBoard(); }
   render();
   saveGame();
 }
@@ -1024,7 +1226,7 @@ function newGame() {
 // ── Persistence ────────────────────────────────────────────────────────────
 
 function saveGame() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ board, score, level, moves, hints, target })); } catch(e) {}
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ board, special, score, level, moves, hints, target })); } catch(e) {}
 }
 
 function loadGame() {
@@ -1033,6 +1235,7 @@ function loadGame() {
     if (!s || !Array.isArray(s.board) || s.board.length !== ROWS) return false;
     board = s.board; score = s.score ?? 0; level = s.level ?? 1;
     moves = s.moves ?? 30; hints = s.hints ?? 3; target = s.target ?? 2000;
+    special = s.special ?? board.map(row => row.map(() => null));
     return true;
   } catch(e) { return false; }
 }
