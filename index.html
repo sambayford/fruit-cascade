@@ -614,7 +614,7 @@
   <div class="actions">
     <div class="stat-box" style="flex:1">
       <div class="stat-label">Moves Left</div>
-      <div class="stat-value" id="moves-used-val">30</div>
+      <div class="stat-value" id="moves-used-val">9</div>
     </div>
   </div>
 </div>
@@ -638,7 +638,7 @@ const BEST_KEY = 'fruitCascade_best';
 
 let board = [];
 let special = []; // parallel board: null | 'glowing'
-let level = 1, moves = 30, movesUsed = 0, bestLevel = 1, hints = 3;
+let level = 1, moves = 9, movesUsed = 0, bestLevel = 1, hints = 3;
 let fruitTargets = [], fruitCollected = [];
 let selected = null, busy = false, touchStart = null;
 
@@ -1316,7 +1316,7 @@ function showGameOver() {
 function nextLevel() {
   overlay.classList.remove('show');
   level++;
-  moves  = 30 + Math.min(level * 2, 20);
+  moves  = 9 + (level - 1) * 3;
   movesUsed = 0;
   hints  = 3;
   initTargets();
@@ -1328,7 +1328,7 @@ function nextLevel() {
 
 function newGame() {
   overlay.classList.remove('show');
-  level = 1; moves = 30; movesUsed = 0; hints = 3; selected = null;
+  level = 1; moves = 9; movesUsed = 0; hints = 3; selected = null;
   initTargets();
   clearSave();
   newBoard();
@@ -1346,7 +1346,7 @@ function loadGame() {
     const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
     if (!s || !Array.isArray(s.board) || s.board.length !== ROWS) return false;
     board = s.board; level = s.level ?? 1;
-    moves = s.moves ?? 30; movesUsed = s.movesUsed ?? 0; hints = s.hints ?? 3;
+    moves = s.moves ?? 9; movesUsed = s.movesUsed ?? 0; hints = s.hints ?? 3;
     special = s.special ?? board.map(row => row.map(() => null));
     fruitTargets   = s.fruitTargets   ?? levelFruitTargets(level);
     fruitCollected = s.fruitCollected ?? Array(GEM_TYPES).fill(0);
