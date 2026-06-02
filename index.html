@@ -595,7 +595,6 @@
 
   <div id="board-wrap">
     <div id="board"></div>
-    <div id="combo-display"></div>
   </div>
 
   <div id="monkey-wrap">
@@ -642,7 +641,6 @@ let special = []; // parallel board: null | 'glowing'
 let level = 1, moves = 30, movesUsed = 0, bestLevel = 1, hints = 3;
 let fruitTargets = [], fruitCollected = [];
 let selected = null, busy = false, touchStart = null;
-let comboTimer = null;
 
 const boardEl     = document.getElementById('board');
 const movesUsedEl = document.getElementById('moves-used-val');
@@ -875,22 +873,6 @@ function renderFruitTargets() {
 
 // ── Combo display ──────────────────────────────────────────────────────────
 
-function showCombo(n) {
-  const el = document.getElementById('combo-display');
-  el.innerHTML = `<div class="combo-x">×${n}</div><div class="combo-label">Combo!</div>`;
-  // Force reflow to restart animation
-  el.classList.remove('show');
-  void el.offsetWidth;
-  el.classList.add('show');
-  if (comboTimer) clearTimeout(comboTimer);
-  comboTimer = setTimeout(() => el.classList.remove('show'), 900);
-}
-
-function hideCombo() {
-  if (comboTimer) clearTimeout(comboTimer);
-  document.getElementById('combo-display').classList.remove('show');
-}
-
 // ── Cascade ────────────────────────────────────────────────────────────────
 
 // Collect all cells to clear, respecting special effects (chain reaction)
@@ -1001,8 +983,10 @@ async function cascade(combo) {
   const mergeDuration = newSpecials.length > 0 ? 380 : 0;
   const waitDuration = Math.max(flyDuration, mergeDuration);
 
-  // Count all cleared fruit toward targets (including pivot cells — they were real fruit)
+  // Count cleared fruit — exclude cells that merge into a special (pivot and merge cells)
+  const mergeSet = new Set([...mergePivotMap.keys(), ...pivotSet]);
   clearCells.forEach(([r,c]) => {
+    if (mergeSet.has(r*COLS+c)) return;
     const g = board[r][c];
     if (g != null && g >= 0 && g < GEM_TYPES) fruitCollected[g] = (fruitCollected[g]||0) + 1;
   });
@@ -1012,7 +996,6 @@ async function cascade(combo) {
   clearCells.forEach(([r,c]) => { basePts += special[r][c] ? 60 : 20; });
   const multiplier = combo;
   const pts = basePts * multiplier;
-  if (combo >= 2) showCombo(combo);
   updateUI();
 
   // Wait for animations, then monkey chomps (only if fruit went to monkey)
@@ -1267,7 +1250,6 @@ async function trySwap(r1, c1, r2, c2) {
   render();           // board now shows swapped state
   await cascade(1);   // finds & clears matches, drops, fills, repeats
 
-  hideCombo();
   if (!hasValidMove()) { shuffleBoard(); render(); }
 
   saveGame();
