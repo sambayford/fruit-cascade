@@ -559,10 +559,11 @@
     }
 
 
-    /* Fruit row aligned under stat boxes */
+    /* Fruit row — 2 rows of 3 */
     .fruit-row {
-      display: flex;
-      gap: 10px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
       width: 100%;
     }
     .stat-fruit {
@@ -607,13 +608,14 @@
     <div class="stat-fruit" id="fruit-slot-0"></div>
     <div class="stat-fruit" id="fruit-slot-1"></div>
     <div class="stat-fruit" id="fruit-slot-2"></div>
+    <div class="stat-fruit" id="fruit-slot-3"></div>
+    <div class="stat-fruit" id="fruit-slot-4"></div>
+    <div class="stat-fruit" id="fruit-slot-5"></div>
   </div>
   <div class="actions">
-    <button class="btn" id="hint-btn">💡 Hint<span id="hint-count">3</span></button>
-    <button class="btn primary" id="new-btn">✦ New Game</button>
     <div class="stat-box" style="flex:1">
-      <div class="stat-label">Moves Used</div>
-      <div class="stat-value" id="moves-used-val">0</div>
+      <div class="stat-label">Moves Left</div>
+      <div class="stat-value" id="moves-used-val">30</div>
     </div>
   </div>
 </div>
@@ -629,8 +631,8 @@
 
 <script>
 const COLS = 8, ROWS = 8;
-const GEM_TYPES = 7;
-const GEM_EMOJI = ['🍉','🍇','🍏','🍌','🍊','🍑','🫐'];
+const GEM_TYPES = 6;
+const GEM_EMOJI = ['🍉','🍇','🍏','🍌','🍊','🫐'];
 
 const SAVE_KEY = 'fruitCascade_save';
 const BEST_KEY = 'fruitCascade_best';
@@ -644,7 +646,6 @@ let comboTimer = null;
 
 const boardEl     = document.getElementById('board');
 const movesUsedEl = document.getElementById('moves-used-val');
-const hintCnt     = document.getElementById('hint-count');
 const overlay     = document.getElementById('overlay');
 
 // ── Utilities ──────────────────────────────────────────────────────────────
@@ -656,22 +657,14 @@ function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 function levelFruitTargets(lvl) {
   const count = lvl * 3;
-  // Pick 3 random fruit types for this level (seeded by level so consistent on reload)
-  const order = [...Array(GEM_TYPES).keys()].sort((a, b) => {
-    // deterministic shuffle based on level
-    const ha = Math.sin(lvl * 127 + a * 31) * 10000;
-    const hb = Math.sin(lvl * 127 + b * 31) * 10000;
-    return (ha - Math.floor(ha)) - (hb - Math.floor(hb));
-  });
-  const chosen = new Set(order.slice(0, 3));
-  return Array.from({ length: GEM_TYPES }, (_, g) => chosen.has(g) ? count : 0);
+  return Array.from({ length: GEM_TYPES }, () => count);
 }
 function initTargets() {
   fruitTargets   = levelFruitTargets(level);
   fruitCollected = Array(GEM_TYPES).fill(0);
 }
 function allTargetsMet() {
-  return fruitTargets.every((t, i) => t === 0 || (fruitCollected[i] || 0) >= t);
+  return fruitTargets.every((t, i) => (fruitCollected[i] || 0) >= t);
 }
 
 function newBoard() {
@@ -862,23 +855,14 @@ function render(newCells = new Set()) {
 }
 
 function updateUI() {
-  movesUsedEl.textContent = movesUsed;
-  hintCnt.textContent     = hints;
+  movesUsedEl.textContent = moves;
   renderFruitTargets();
 }
 
 function renderFruitTargets() {
-  // Find the 3 required fruit types
-  const required = [];
   for (let g = 0; g < GEM_TYPES; g++) {
-    if ((fruitTargets[g] || 0) > 0) required.push(g);
-  }
-  // Fill one into each stat-fruit slot
-  for (let slot = 0; slot < 3; slot++) {
-    const el = document.getElementById('fruit-slot-' + slot);
+    const el = document.getElementById('fruit-slot-' + g);
     if (!el) continue;
-    if (slot >= required.length) { el.innerHTML = ''; continue; }
-    const g         = required[slot];
     const tgt       = fruitTargets[g] || 0;
     const collected = Math.min(fruitCollected[g] || 0, tgt);
     const done      = collected >= tgt;
@@ -1308,7 +1292,6 @@ function showHint() {
         swapCells(r1, c1, r2, c2);
         if (ok) {
           hints--;
-          hintCnt.textContent = hints;
           [cell(r1,c1), cell(r2,c2)].forEach(el => {
             el.classList.add('hint');
             setTimeout(() => el.classList.remove('hint'), 2500);
@@ -1395,8 +1378,6 @@ function loadBestLevel() { try { bestLevel = parseInt(localStorage.getItem(BEST_
 
 // ── Boot ───────────────────────────────────────────────────────────────────
 
-document.getElementById('new-btn').addEventListener('click', newGame);
-document.getElementById('hint-btn').addEventListener('click', showHint);
 
 
 loadBestLevel();
