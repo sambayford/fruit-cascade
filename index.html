@@ -654,6 +654,7 @@ const BEST_KEY = 'fruitCascade_best';
 let board = [];
 let special = []; // parallel board: null | 'glowing'
 let level = 1, moves = 10, movesUsed = 0, bestLevel = 1, hints = 3;
+let lastSwapped = null;
 let fruitTargets = [], fruitCollected = [];
 let selected = null, busy = false, touchStart = null;
 
@@ -938,7 +939,12 @@ async function cascade(combo) {
       if (shared) {
         const totalCells = new Set([...a.cells, ...b.cells].map(([r,c]) => r*COLS+c));
         if (totalCells.size >= 5) {
-          newSpecials.push({ r: shared[0], c: shared[1], kind: 'glowing', gemType: a.gemType });
+          const allLCells = [...a.cells, ...b.cells];
+          let pr = shared[0], pc = shared[1];
+          if (lastSwapped && allLCells.some(([r,c]) => r === lastSwapped.r && c === lastSwapped.c)) {
+            pr = lastSwapped.r; pc = lastSwapped.c;
+          }
+          newSpecials.push({ r: pr, c: pc, kind: 'glowing', gemType: a.gemType });
           usedGroups.add(i);
           usedGroups.add(j);
         }
@@ -952,7 +958,11 @@ async function cascade(combo) {
     const { len, pivot, gemType, cells } = groups[i];
     const hasSpecialInGroup = cells.some(([r,c]) => special[r][c]);
     if (!hasSpecialInGroup && len >= 4) {
-      newSpecials.push({ r: pivot[0], c: pivot[1], kind: 'glowing', gemType });
+      let pr = pivot[0], pc = pivot[1];
+      if (lastSwapped && cells.some(([r,c]) => r === lastSwapped.r && c === lastSwapped.c)) {
+        pr = lastSwapped.r; pc = lastSwapped.c;
+      }
+      newSpecials.push({ r: pr, c: pc, kind: 'glowing', gemType });
     }
   }
 
@@ -1274,8 +1284,10 @@ async function trySwap(r1, c1, r2, c2) {
 
   moves--;
   movesUsed++;
+  lastSwapped = { r: r2, c: c2 };
   render();           // board now shows swapped state
   await cascade(1);   // finds & clears matches, drops, fills, repeats
+  lastSwapped = null;
 
   if (!hasValidMove()) { shuffleBoard(); render(); }
 
