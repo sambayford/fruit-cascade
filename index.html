@@ -1353,7 +1353,7 @@ function showLevelComplete() {
 function retryLevel() {
   overlay.classList.remove('show');
   // Reset moves and collection but keep the board as-is
-  moves     = 10 + (level - 1) * 2;
+  moves     = moves + 5;
   movesUsed = 0;
   hints     = 3;
   initTargets();
@@ -1376,7 +1376,6 @@ function showGameOver() {
 function nextLevel() {
   overlay.classList.remove('show');
   level++;
-  moves  = 10 + (level - 1) * 2;
   movesUsed = 0;
   hints  = 3;
   initTargets();
