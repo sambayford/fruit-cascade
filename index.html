@@ -1,1516 +1,2526 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#0d0a1a">
-  <meta name="description" content="Fruit Cascade — a juicy match-3 fruit puzzle game">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Fruit Cascade">
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <title>Fruit Cascade</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg-deep:   #0a1a0d;
-      --bg-mid:    #0e2813;
-      --bg-panel:  rgba(255,255,255,0.04);
-      --border:    rgba(255,255,255,0.08);
-      --gold:      #f0c060;
-      --gold-glow: #ffdd88;
-      --silver:    #c8d8e8;
-      --text:      #e8e0f8;
-      --dim:       #7a6e9a;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Streak">
+<meta name="theme-color" content="#0f0f12">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/png" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>Streak — Life Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&family=Inter:wght@400;500;600&display=swap');
 
-      --ruby:      #ff2d55;
-      --sapphire:  #0a84ff;
-      --emerald:   #30d158;
-      --amethyst:  #bf5af2;
-      --topaz:     #ffd60a;
-      --diamond:   #64d2ff;
-      --garnet:    #ff6b35;
+  :root {
+    --bg: #0f0f12;
+    --surface: #1a1a20;
+    --surface2: #22222a;
+    --border: #2e2e38;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --positive: #4ade80;
+    --positive-dim: rgba(74,222,128,0.12);
+    --negative: #f87171;
+    --negative-dim: rgba(248,113,113,0.12);
+    --accent: #a78bfa;
+    --accent-dim: rgba(167,139,250,0.15);
+    --gold: #fbbf24;
+  }
 
-      --cell: 60px;
-      --gap: 4px;
-      --board-size: calc(var(--cell) * 8 + var(--gap) * 9);
-    }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.5;
+    min-height: 100dvh; padding-bottom: env(safe-area-inset-bottom);
+    overscroll-behavior: none;
+  }
 
-    body {
-      background: var(--bg-deep);
-      color: var(--text);
-      font-family: 'Cinzel', serif;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      overflow: hidden;
-      position: relative;
-    }
+  .app { max-width: 480px; margin: 0 auto; padding: 0 16px 100px; }
 
-    /* Starfield */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.6) 0%, transparent 100%),
-        radial-gradient(1px 1px at 25% 40%, rgba(255,255,255,0.4) 0%, transparent 100%),
-        radial-gradient(1px 1px at 60% 10%, rgba(255,255,255,0.5) 0%, transparent 100%),
-        radial-gradient(1px 1px at 80% 30%, rgba(255,255,255,0.3) 0%, transparent 100%),
-        radial-gradient(1px 1px at 45% 70%, rgba(255,255,255,0.4) 0%, transparent 100%),
-        radial-gradient(1px 1px at 90% 60%, rgba(255,255,255,0.5) 0%, transparent 100%),
-        radial-gradient(1px 1px at 5%  85%, rgba(255,255,255,0.3) 0%, transparent 100%),
-        radial-gradient(1px 1px at 70% 90%, rgba(255,255,255,0.4) 0%, transparent 100%),
-        radial-gradient(2px 2px at 35% 55%, rgba(200,160,255,0.5) 0%, transparent 100%),
-        radial-gradient(2px 2px at 75% 20%, rgba(160,200,255,0.4) 0%, transparent 100%);
-      pointer-events: none;
-      z-index: 0;
-    }
+  header {
+    padding: 24px 0 16px; display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 12px;
+  }
+  .wordmark { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; line-height: 1; }
+  .wordmark span { color: var(--accent); }
+  .date-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
 
-    /* Ambient gradient blobs */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background:
-        radial-gradient(ellipse 40% 30% at 15% 20%, rgba(58,140,0,0.12) 0%, transparent 70%),
-        radial-gradient(ellipse 35% 40% at 85% 70%, rgba(232,93,0,0.10) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 25% at 50% 90%, rgba(230,200,0,0.08) 0%, transparent 70%);
-      pointer-events: none;
-      z-index: 0;
-    }
+  .score-block { text-align: right; }
+  .score-ring-wrap { position: relative; width: 64px; height: 64px; margin-left: auto; }
+  .score-ring-wrap svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+  .score-number { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 18px; font-weight: 700; }
+  .score-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-align: right; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
 
-    #app {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-      max-width: 480px;
-      padding: 12px 16px 24px;
-      gap: 12px;
-    }
+  .streak-row { display: flex; gap: 8px; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 20px; }
+  .streak-icon { font-size: 22px; }
+  .streak-text strong { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; color: var(--gold); }
+  .streak-text p { font-size: 13px; color: var(--muted); }
+  .reset-day-btn { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 10px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'DM Mono', monospace; }
 
-    /* Header */
-    header {
-      text-align: center;
-      padding: 6px 0 2px;
-    }
-    header h1 {
-      font-family: 'Cinzel Decorative', cursive;
-      font-size: clamp(1.4rem, 5vw, 2rem);
-      font-weight: 900;
-      background: linear-gradient(135deg, var(--gold-glow) 0%, var(--gold) 40%, #e8a030 70%, var(--gold-glow) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      letter-spacing: 0.05em;
-      text-shadow: none;
-      filter: drop-shadow(0 0 12px rgba(240,192,96,0.4));
-    }
-    header p {
-      font-size: 0.65rem;
-      color: var(--dim);
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin: 24px 0 10px; }
+  .section-title { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  .add-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 18px; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .add-btn:active { background: var(--surface2); }
 
-    /* Stats bar */
-    .stats {
-      display: flex;
-      gap: 10px;
-      width: 100%;
-    }
-    .stat-box {
-      flex: 1;
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 8px 10px;
-      text-align: center;
-      backdrop-filter: blur(8px);
-    }
-    .stat-label {
-      font-size: 0.55rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--dim);
-      margin-bottom: 2px;
-    }
-    .stat-value {
-      font-family: 'Cinzel Decorative', cursive;
-      font-size: 1.1rem;
-      color: var(--gold);
-      line-height: 1;
-    }
-    #moves-val { color: var(--silver); transition: color 0.3s; }
-    #moves-val.warn  { color: var(--topaz); }
-    #moves-val.danger { color: var(--ruby); animation: flash-danger 0.6s ease-in-out infinite alternate; }
-    @keyframes flash-danger {
-      from { color: var(--ruby); text-shadow: none; }
-      to   { color: #ff6680; text-shadow: 0 0 12px rgba(255,45,85,0.9); }
-    }
+  .habit-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; -webkit-tap-highlight-color: transparent; user-select: none; transition: opacity 0.15s, transform 0.15s; }
+  .habit-card.positive { border-left: 3px solid var(--positive); }
+  .habit-card.negative { border-left: 3px solid var(--negative); }
+  .habit-card.dragging { opacity: 0.4; }
+  .habit-card.drag-over { border-color: var(--accent); }
+  .drag-handle { color: var(--border); font-size: 18px; cursor: grab; flex-shrink: 0; padding: 0 2px; touch-action: none; line-height: 1; }
+  .drag-handle:active { cursor: grabbing; color: var(--muted); }
+  .habit-icon { font-size: 24px; width: 36px; text-align: center; flex-shrink: 0; }
+  .habit-info { flex: 1; min-width: 0; }
+  .habit-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .habit-meta { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-    /* Progress bar */
-    .progress-wrap {
-      width: 100%;
-      height: 6px;
-      background: rgba(255,255,255,0.06);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-    .progress-fill {
-      height: 100%;
-      border-radius: 3px;
-      background: linear-gradient(90deg, #e85d00, #e6c800, #3a8c00, #e8002d);
-      background-size: 200% 100%;
-      transition: width 0.4s ease;
-      animation: shimmer 2s linear infinite;
-    }
-    @keyframes shimmer { 0%{background-position:200%} 100%{background-position:-200%} }
+  .habit-counter { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .counter-btn { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--border); background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 300; line-height: 1; transition: all 0.12s; flex-shrink: 0; -webkit-tap-highlight-color: transparent; color: var(--muted); }
+  .counter-btn.plus { border-color: var(--positive); color: var(--positive); }
+  .counter-btn.plus:active { background: var(--positive-dim); transform: scale(0.9); }
+  .counter-btn.minus { border-color: var(--negative); color: var(--negative); }
+  .counter-btn.minus:active { background: var(--negative-dim); transform: scale(0.9); }
+  .counter-btn:disabled { opacity: 0.25; pointer-events: none; }
+  .counter-val { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; min-width: 22px; text-align: center; line-height: 1; }
+  .counter-val.pos { color: var(--positive); }
+  .counter-val.neg { color: var(--negative); }
+  .counter-val.zero { color: var(--muted); font-size: 16px; }
 
-    /* Board */
-    #board-wrap {
-      position: relative;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-    }
-    #board {
-      display: grid;
-      grid-template-columns: repeat(8, var(--cell));
-      grid-template-rows: repeat(8, var(--cell));
-      gap: var(--gap);
-      padding: var(--gap);
-      background: rgba(0,0,0,0.20);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      backdrop-filter: blur(12px);
-      position: relative;
-    }
+  .empty { text-align: center; padding: 24px 16px; color: var(--muted); font-size: 13px; border: 1px dashed var(--border); border-radius: 14px; margin-bottom: 8px; }
 
-    /* Cell */
-    .cell {
-      width: var(--cell);
-      height: var(--cell);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      position: relative;
-      transition: transform 0.1s ease;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-    .cell.empty { background: transparent; }
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15,15,18,0.96); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--border); display: flex; align-items: center; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); gap: 4px; justify-content: center; z-index: 100; }
+  .nav-btn { background: none; border: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 8px 28px; border-radius: 20px; transition: background 0.15s, color 0.15s; -webkit-tap-highlight-color: transparent; flex: 1; }
+  .nav-btn .icon { font-size: 24px; line-height: 1; }
+  .nav-btn.active { background: var(--surface2); color: var(--text); }
 
-    /* Fruit */
-    .gem {
-      width: 52px;
-      height: 52px;
-      position: relative;
-      transition: transform 0.15s ease, filter 0.15s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 38px;
-      background: none;
-      line-height: 1;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
-    }
+  .panel { display: none; }
+  .panel.active { display: block; }
 
-    .gem::before { display: none; }
-    .gem::after  { display: none; }
+  /* Stats */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+  .stat-value { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 700; line-height: 1; }
+  .stat-value.green { color: var(--positive); }
+  .stat-value.red { color: var(--negative); }
+  .stat-value.purple { color: var(--accent); }
+  .stat-value.gold { color: var(--gold); }
+  .stat-name { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 180px; padding-bottom: 28px; position: relative; margin-bottom: 4px; }
+  .bar-chart::after { content: ''; position: absolute; bottom: 28px; left: 0; right: 0; height: 1px; background: var(--border); }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; }
+  .bar-val { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); line-height: 1; min-height: 14px; display: flex; align-items: flex-end; }
+  .bar-wrap { width: 100%; display: flex; align-items: flex-end; justify-content: center; flex: 1; }
+  .bar { width: 100%; border-radius: 5px 5px 0 0; transition: height 0.4s cubic-bezier(0.34,1.2,0.64,1); min-height: 3px; }
+  .bar-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); position: absolute; bottom: 6px; text-align: center; width: calc(100% / 7); }
+  .bar-labels { display: flex; gap: 6px; margin-top: 8px; }
+  .bar-label-cell { flex: 1; text-align: center; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
+  .bar-label-cell.today { color: var(--accent); }
+  .bar-scores { display: flex; gap: 6px; }
+  .bar-score-cell { flex: 1; text-align: center; font-family: 'DM Mono', monospace; font-size: 10px; }
+  .bar-weights { display: flex; gap: 6px; margin-top: 2px; }
+  .bar-weight-cell { flex: 1; text-align: center; font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); line-height: 1.4; word-break: break-word; }
 
-    /* No per-fruit backgrounds needed — emoji only */
-    .gem-0,.gem-1,.gem-2,.gem-3,.gem-4,.gem-5,.gem-6 { background: none; box-shadow: none; }
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: flex-end; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border-radius: 20px 20px 0 0; padding: 24px 20px calc(24px + env(safe-area-inset-bottom)); width: 100%; max-width: 480px; border: 1px solid var(--border); border-bottom: none; max-height: 92dvh; overflow-y: auto; }
+  .modal h2 { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; margin-bottom: 20px; }
 
-    /* Selected */
-    .cell.selected .gem {
-      transform: scale(1.18);
-      animation: pulse-sel 0.6s ease-in-out infinite alternate;
-    }
-    @keyframes pulse-sel {
-      from { filter: drop-shadow(0 0 4px rgba(255,220,80,0.6)); }
-      to   { filter: drop-shadow(0 0 14px rgba(255,220,80,1)) drop-shadow(0 0 6px rgba(255,255,255,0.8)); }
-    }
+  .field { margin-bottom: 16px; }
+  .field label { font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); display: block; margin-bottom: 6px; }
+  .field input, .field select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 15px; outline: none; }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
 
-    /* Match flash */
-    /* matched cells hide immediately — flying clones do the visual */
-    .cell.matching .gem { visibility: hidden; }
+  .type-toggle { display: flex; gap: 8px; }
+  .type-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: none; color: var(--muted); font-family: 'Inter', sans-serif; font-size: 14px; cursor: pointer; transition: all 0.15s; font-weight: 500; }
+  .type-btn.pos.selected { background: var(--positive-dim); border-color: var(--positive); color: var(--positive); }
+  .type-btn.neg.selected { background: var(--negative-dim); border-color: var(--negative); color: var(--negative); }
 
-    /* Flying fruit clone */
-    .fly-fruit {
-      position: fixed;
-      pointer-events: none;
-      z-index: 999;
-      font-size: 30px;
-      line-height: 1;
-      will-change: transform, opacity;
-      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
-    }
+  .emoji-custom-row { margin-bottom: 8px; }
+  .emoji-custom-row input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 22px; outline: none; }
+  .emoji-custom-row input:focus { border-color: var(--accent); }
+  .emoji-custom-row input::placeholder { font-size: 13px; color: var(--muted); }
+  .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; background: var(--surface2); border-radius: 10px; padding: 8px; border: 1px solid var(--border); }
+  .emoji-opt { font-size: 22px; text-align: center; padding: 4px; border-radius: 6px; cursor: pointer; transition: background 0.1s; }
+  .emoji-opt:active, .emoji-opt.selected { background: var(--accent-dim); }
 
-    /* Drop in */
-    .cell.drop-in .gem {
-      animation: drop-in 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
-    }
-    @keyframes drop-in {
-      from { transform: translateY(-40px) scale(0.6); opacity: 0; }
-      to   { transform: translateY(0) scale(1); opacity: 1; }
-    }
+  /* Weight tracking section in modal */
+  .weight-section { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+  .weight-section-head { display: flex; align-items: center; justify-content: space-between; }
+  .weight-section-title { font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .weight-toggle { width: 44px; height: 26px; background: var(--border); border-radius: 13px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; border: none; }
+  .weight-toggle::after { content: ''; position: absolute; width: 20px; height: 20px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
+  .weight-toggle.on { background: var(--accent); }
+  .weight-toggle.on::after { transform: translateX(18px); }
 
-    /* Swap animation — one-way slide, held at destination */
-    .cell.swap-right .gem { animation: slide-r 0.18s ease forwards; }
-    .cell.swap-left  .gem { animation: slide-l 0.18s ease forwards; }
-    .cell.swap-down  .gem { animation: slide-d 0.18s ease forwards; }
-    .cell.swap-up    .gem { animation: slide-u 0.18s ease forwards; }
-    @keyframes slide-r { from{transform:translateX(0)} to{transform:translateX(calc(var(--cell) + var(--gap)))} }
-    @keyframes slide-l { from{transform:translateX(0)} to{transform:translateX(calc(-1*(var(--cell) + var(--gap))))} }
-    @keyframes slide-d { from{transform:translateY(0)} to{transform:translateY(calc(var(--cell) + var(--gap)))} }
-    @keyframes slide-u { from{transform:translateY(0)} to{transform:translateY(calc(-1*(var(--cell) + var(--gap))))} }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-primary { flex: 1; background: var(--accent); color: #0f0f12; border: none; border-radius: 12px; padding: 14px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .btn-secondary { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); border-radius: 12px; padding: 14px 20px; font-family: 'Inter', sans-serif; font-size: 15px; cursor: pointer; }
+  .btn-danger { background: var(--negative-dim); color: var(--negative); border: 1px solid rgba(248,113,113,0.3); border-radius: 12px; padding: 14px 20px; font-family: 'Inter', sans-serif; font-size: 15px; cursor: pointer; }
 
-    /* Bounce-back for invalid swaps only */
-    .cell.bounce-right .gem { animation: bounce-r 0.30s ease forwards; }
-    .cell.bounce-left  .gem { animation: bounce-l 0.30s ease forwards; }
-    .cell.bounce-down  .gem { animation: bounce-d 0.30s ease forwards; }
-    .cell.bounce-up    .gem { animation: bounce-u 0.30s ease forwards; }
-    @keyframes bounce-r { 0%{transform:translateX(0)} 40%{transform:translateX(calc((var(--cell) + var(--gap))*0.5))} 100%{transform:translateX(0)} }
-    @keyframes bounce-l { 0%{transform:translateX(0)} 40%{transform:translateX(calc(-1*(var(--cell) + var(--gap))*0.5))} 100%{transform:translateX(0)} }
-    @keyframes bounce-d { 0%{transform:translateY(0)} 40%{transform:translateY(calc((var(--cell) + var(--gap))*0.5))} 100%{transform:translateY(0)} }
-    @keyframes bounce-u { 0%{transform:translateY(0)} 40%{transform:translateY(calc(-1*(var(--cell) + var(--gap))*0.5))} 100%{transform:translateY(0)} }
+  .toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-80px); background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 10px 18px; font-size: 14px; font-weight: 500; z-index: 300; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); white-space: nowrap; max-width: calc(100vw - 32px); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
 
-    /* Hint pulse */
-    .cell.hint .gem { animation: hint-pulse 0.8s ease-in-out 3; }
-    @keyframes hint-pulse {
-      0%,100% { transform: scale(1); }
-      50%      { transform: scale(1.15); filter: brightness(1.5) saturate(1.5); }
-    }
+  .sort-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 11px; font-family: 'DM Mono', monospace; height: 28px; padding: 0 8px; border-radius: 8px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .sort-btn:active, .sort-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .tally-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tally-chip { font-family: 'DM Mono', monospace; font-size: 11px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+  .tally-chip .chip-icon { font-size: 14px; }
+  .tally-chip .chip-count { font-weight: 500; color: var(--text); }
 
-    /* Score popup */
-    .score-pop {
-      position: absolute;
-      pointer-events: none;
-      font-family: 'Cinzel Decorative', cursive;
-      font-size: 1rem;
-      color: var(--gold-glow);
-      text-shadow: 0 0 8px rgba(255,220,100,0.8);
-      animation: score-float 1s ease forwards;
-      z-index: 100;
-      white-space: nowrap;
-    }
-    @keyframes score-float {
-      0%   { opacity: 1; transform: translateY(0) scale(1); }
-      100% { opacity: 0; transform: translateY(-60px) scale(1.3); }
-    }
+  /* Settings */
+  .settings-group { margin-bottom: 28px; }
+  .settings-group-title { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 10px; }
+  .settings-row { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 2px; }
+  .settings-item { display: flex; align-items: center; gap: 14px; padding: 16px; border-bottom: 1px solid var(--border); }
+  .settings-item:last-child { border-bottom: none; }
+  .settings-item-icon { font-size: 20px; width: 32px; text-align: center; flex-shrink: 0; }
+  .settings-item-info { flex: 1; }
+  .settings-item-label { font-weight: 500; font-size: 15px; }
+  .settings-item-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .settings-item-action { flex-shrink: 0; }
+  .settings-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 8px 16px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .settings-btn:active { opacity: 0.7; }
+  .settings-btn.danger { background: var(--negative-dim); border-color: rgba(248,113,113,0.3); color: var(--negative); }
+  .settings-version { text-align: center; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 32px; }
 
-    /* Bottom buttons */
-    .actions {
-      display: flex;
-      gap: 10px;
-      width: 100%;
-    }
-    .btn {
-      flex: 1;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: var(--bg-panel);
-      color: var(--text);
-      font-family: 'Cinzel', serif;
-      font-size: 0.7rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      cursor: pointer;
-      backdrop-filter: blur(8px);
-      transition: background 0.2s, border-color 0.2s, transform 0.1s;
-    }
-    .btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
-    .btn:active { transform: scale(0.96); }
-    .btn.primary {
-      background: linear-gradient(135deg, rgba(191,90,242,0.3), rgba(10,132,255,0.3));
-      border-color: rgba(191,90,242,0.4);
-      color: var(--gold);
-    }
-    #hint-btn { position: relative; }
-    #hint-count {
-      position: absolute;
-      top: 4px; right: 6px;
-      font-size: 0.6rem;
-      color: var(--dim);
-    }
+  /* Personal bests */
+  .pb-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+  .pb-icon { font-size: 22px; width: 32px; text-align: center; flex-shrink: 0; }
+  .pb-info { flex: 1; min-width: 0; }
+  .pb-name { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pb-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .pb-value { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; color: var(--gold); flex-shrink: 0; }
+  .pb-value.count { color: var(--positive); }
+  .pb-overall { background: var(--accent-dim); border-color: rgba(167,139,250,0.3); }
+  .pb-weight { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gold); margin-top: 5px; }
 
-    /* Level complete overlay */
-    #overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(13,10,26,0.92);
-      z-index: 200;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(10px);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s;
-    }
-    #overlay.show { opacity: 1; pointer-events: all; }
-    .overlay-card {
-      background: linear-gradient(160deg, rgba(30,20,60,0.95), rgba(20,12,40,0.95));
-      border: 1px solid rgba(240,192,96,0.3);
-      border-radius: 20px;
-      padding: 36px 40px;
-      text-align: center;
-      max-width: 300px;
-      width: 90%;
-      box-shadow: 0 0 60px rgba(191,90,242,0.2), 0 0 120px rgba(10,132,255,0.1);
-    }
-    .overlay-title {
-      font-family: 'Cinzel Decorative', cursive;
-      font-size: 1.6rem;
-      color: var(--gold);
-      filter: drop-shadow(0 0 8px rgba(240,192,96,0.5));
-      margin-bottom: 8px;
-    }
-    .overlay-sub {
-      font-size: 0.75rem;
-      color: var(--dim);
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      margin-bottom: 20px;
-    }
-    .overlay-score {
-      font-family: 'Cinzel Decorative', cursive;
-      font-size: 2.2rem;
-      color: var(--gold-glow);
-      margin-bottom: 24px;
-    }
-    .overlay-moves {
-      font-size: 0.75rem;
-      color: var(--dim);
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      margin-bottom: 20px;
-    }
-    .overlay-btn {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, rgba(191,90,242,0.4), rgba(10,132,255,0.4));
-      border: 1px solid rgba(191,90,242,0.5);
-      border-radius: 12px;
-      color: var(--gold);
-      font-family: 'Cinzel', serif;
-      font-size: 0.85rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-    }
-    .overlay-btn:hover { background: linear-gradient(135deg, rgba(191,90,242,0.6), rgba(10,132,255,0.6)); }
-    .overlay-btn:active { transform: scale(0.97); }
+  /* Changelog */
+  .changelog { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .cl-entry { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .cl-entry:last-child { border-bottom: none; }
+  .cl-version { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .cl-list { list-style: none; padding: 0; margin: 0; }
+  .cl-list li { font-size: 13px; color: var(--muted); padding: 2px 0 2px 14px; position: relative; line-height: 1.5; }
+  .cl-list li::before { content: '·'; position: absolute; left: 0; color: var(--border); }
 
-    /* Mobile scale */
-    @media (max-width: 420px) {
-      :root { --cell: 42px; --gap: 3px; }
-      .gem { width: 36px; height: 36px; font-size: 26px; }
-      .gem::after { display: none; }
-    }
-    @media (max-width: 360px) {
-      :root { --cell: 38px; --gap: 2px; }
-      .gem { width: 33px; height: 33px; font-size: 23px; }
-    }
+  /* Date navigator row */
+  .date-nav-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .today-date-big { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 300; color: var(--muted); line-height: 1.1; }
+  .date-nav-btns { display: flex; gap: 8px; align-items: center; }
+  .date-circle-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--surface2); border: none;
+    color: var(--text); font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent; transition: background 0.15s;
+  }
+  .date-circle-btn:active { background: var(--border); }
+  .date-circle-btn:disabled { opacity: 0.25; pointer-events: none; }
+  .score-circle {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--surface2);
+    position: relative; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .score-circle svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+  .score-circle-num {
+    position: relative; z-index: 1;
+    font-family: 'Fraunces', serif; font-size: 12px; font-weight: 700;
+    color: var(--text); line-height: 1;
+  }
 
-    /* Monkey */
-    #monkey-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      height: 52px;
-      position: relative;
-      width: 100%;
-    }
-    #monkey {
-      font-size: 2.4rem;
-      line-height: 1;
-      transition: transform 0.15s ease;
-      display: inline-block;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
-    }
-    #monkey.chomp {
-      animation: monkey-chomp 0.5s ease forwards;
-    }
-    @keyframes monkey-chomp {
-      0%   { transform: scale(1) rotate(0deg); }
-      20%  { transform: scale(1.35) rotate(-12deg); }
-      45%  { transform: scale(1.25) rotate(10deg); }
-      70%  { transform: scale(1.15) rotate(-6deg); }
-      100% { transform: scale(1) rotate(0deg); }
-    }
-    #monkey.idle {
-      animation: monkey-idle 2.5s ease-in-out infinite;
-    }
-    @keyframes monkey-idle {
-      0%,100% { transform: translateY(0) rotate(0deg); }
-      30%     { transform: translateY(-3px) rotate(-4deg); }
-      70%     { transform: translateY(-1px) rotate(3deg); }
-    }
-    #monkey-fruit {
-      font-size: 1.6rem;
-      line-height: 1;
-      min-width: 28px;
-      text-align: left;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-    #monkey-fruit.show {
-      animation: fruit-appear 0.9s ease forwards;
-    }
-    @keyframes fruit-appear {
-      0%   { opacity: 0; transform: translateX(-10px) scale(0.5); }
-      25%  { opacity: 1; transform: translateX(0) scale(1.2); }
-      60%  { opacity: 1; transform: scale(1); }
-      100% { opacity: 0; transform: scale(0.3) translateX(20px); }
-    }
-    #monkey-speech {
-      font-family: 'Cinzel', serif;
-      font-size: 0.65rem;
-      color: var(--gold);
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      min-width: 60px;
-    }
-    #monkey-speech.show {
-      animation: speech-pop 1.4s ease forwards;
-    }
-    @keyframes speech-pop {
-      0%   { opacity: 0; transform: translateY(4px); }
-      20%  { opacity: 1; transform: translateY(0); }
-      75%  { opacity: 1; }
-      100% { opacity: 0; transform: translateY(-8px); }
-    }
+  /* Level up modal */
+  .levelup-overlay { align-items: center !important; justify-content: center !important; }
+  .levelup-modal {
+    background: var(--surface);
+    border: 1px solid rgba(167,139,250,0.4);
+    border-radius: 24px;
+    padding: 40px 32px 32px;
+    width: calc(100% - 48px);
+    max-width: 360px;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(167,139,250,0.2);
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0.7); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .lu-stars { font-size: 40px; margin-bottom: 16px; }
+  .lu-heading {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .lu-level {
+    font-family: 'Fraunces', serif;
+    font-size: 52px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .lu-title {
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .lu-msg {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+  .lu-btn {
+    background: var(--accent);
+    color: #0f0f12;
+    border: none;
+    border-radius: 14px;
+    padding: 16px 32px;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.15s;
+  }
+  .lu-btn:active { opacity: 0.8; }
 
+  /* Setup guide */
+  .setup-guide { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .setup-step { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .setup-step:last-child { border-bottom: none; }
+  .setup-num { width: 24px; height: 24px; background: var(--accent-dim); border: 1px solid rgba(167,139,250,0.4); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; flex-shrink: 0; margin-top: 1px; }
+  .setup-title { font-weight: 500; font-size: 14px; margin-bottom: 3px; }
+  .setup-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
 
-    /* Special (glowing) fruit */
-    .gem.glowing {
-      animation: glow-pulse 0.9s ease-in-out infinite alternate;
-      border-radius: 50%;
-    }
-    @keyframes glow-pulse {
-      from {
-        filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 8px currentColor);
-        transform: scale(1);
-      }
-      to {
-        filter: drop-shadow(0 0 10px #fff) drop-shadow(0 0 20px #ffe066) drop-shadow(0 0 30px #ff8c00);
-        transform: scale(1.12);
-      }
-    }
-    /* Special fruit — also hide gem, flying clone carries the visual */
-    .cell.matching-special .gem { visibility: hidden; }
+  .share-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .share-btn:active { background: var(--border); }
 
+  .chart-activity-select {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 14px; outline: none;
+    margin-bottom: 14px;
+  }
+  .chart-activity-select:focus { border-color: var(--accent); }
 
-    /* Combo counter */
-    #combo-display {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      z-index: 50;
-      text-align: center;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-    #combo-display.show {
-      opacity: 1;
-    }
-    #combo-display .combo-x {
-      font-family: 'Cinzel Decorative', cursive;
-      font-size: clamp(2.5rem, 12vw, 4rem);
-      font-weight: 900;
-      line-height: 1;
-      background: linear-gradient(135deg, #fff176, #ffd600, #ff6f00);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      filter: drop-shadow(0 0 16px rgba(255,200,0,0.8));
-      animation: combo-pop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
-    }
-    #combo-display .combo-label {
-      font-family: 'Cinzel', serif;
-      font-size: 0.75rem;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: var(--gold);
-      opacity: 0.85;
-      margin-top: 2px;
-    }
-    @keyframes combo-pop {
-      from { transform: scale(0.4); opacity: 0; }
-      to   { transform: scale(1);   opacity: 1; }
-    }
+  /* Chart period toggle */
+  .chart-toggle { display: flex; gap: 4px; }
+  .chart-toggle-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; border-radius: 7px; padding: 4px 10px; cursor: pointer; transition: all 0.15s; }
+  .chart-toggle-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 
+  /* Day picker */
+  .days-picker { display: flex; gap: 6px; margin-bottom: 6px; }
+  .day-btn { flex: 1; height: 36px; border-radius: 8px; border: 1px solid var(--border); background: none; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+  .day-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .days-hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
-    /* Fruit row — 2 rows of 3 */
-    .fruit-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-      width: 100%;
-    }
-    .stat-fruit {
-      flex: 1;
-      font-family: 'Cinzel', serif;
-      color: var(--dim);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      min-height: 22px;
-    }
-    .stat-fruit .sf-emoji { font-size: 1.8rem; line-height: 1; }
-    .stat-fruit .sf-count { font-size: 0.9rem; color: var(--dim); }
-    .stat-fruit.done .sf-count { color: #30d158; }
-    .stat-fruit .sf-check { opacity: 0; font-size: 0.9rem; transition: opacity 0.3s; }
-    .stat-fruit.done .sf-check { opacity: 1; color: #30d158; }
-
-
-    /* Fruit count pulse when collected */
-    @keyframes fruit-collect-pulse {
-      0%   { transform: scale(1);    filter: none; }
-      35%  { transform: scale(1.5);  filter: drop-shadow(0 0 8px #ffe066) brightness(1.6); }
-      65%  { transform: scale(1.35); filter: drop-shadow(0 0 5px #ffe066) brightness(1.4); }
-      100% { transform: scale(1);    filter: none; }
-    }
-    .stat-fruit.pulse .sf-count {
-      animation: fruit-collect-pulse 0.45s ease forwards;
-    }
-    .stat-fruit.pulse .sf-emoji {
-      animation: fruit-collect-pulse 0.45s ease forwards;
-    }
-
-  </style>
+  /* Level system */
+  .level-row { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+  .level-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .level-badge { font-family: 'Fraunces', serif; font-size: 13px; font-weight: 700; background: var(--accent-dim); border: 1px solid rgba(167,139,250,0.4); color: var(--accent); border-radius: 8px; padding: 4px 10px; flex-shrink: 0; white-space: nowrap; }
+  .level-info { flex: 1; min-width: 0; }
+  .level-title { font-weight: 600; font-size: 14px; }
+  .level-xp { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .level-bar-wrap { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .level-bar { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), #c4b5fd); transition: width 0.5s cubic-bezier(0.34,1.2,0.64,1); }
+</style>
 </head>
 <body>
-<div id="app">
-  <header>
-    <h1>Fruit Cascade</h1>
-    <p>Match · Splash · Munch</p>
-  </header>
 
+<div class="app">
 
+  <!-- TODAY -->
+  <div class="panel active" id="panel-today">
+    <header>
+      <div>
+        <div class="wordmark">streak<span>.</span></div>
+      </div>
+    </header>
 
-  <div id="board-wrap">
-    <div id="board"></div>
+    <!-- Date navigator row -->
+    <div class="date-nav-row">
+      <div class="today-date-big" id="today-date">Today</div>
+      <div class="date-nav-btns">
+        <button class="date-circle-btn" onclick="shiftDay(-1)">‹</button>
+        <button class="date-circle-btn" onclick="shiftDay(1)" id="date-next-btn">›</button>
+        <button class="date-circle-btn" id="back-today-btn" onclick="goToToday()" title="Go to today">»</button>
+        <div class="score-circle">
+          <svg width="40" height="40" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="26" stroke="#2e2e38" stroke-width="5" fill="none"/>
+            <circle id="score-arc" cx="32" cy="32" r="26" stroke="#a78bfa" stroke-width="5" fill="none"
+              stroke-dasharray="163.36" stroke-dashoffset="163.36" stroke-linecap="round"/>
+          </svg>
+          <div class="score-circle-num" id="score-display">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <span class="section-title">✅ Good</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="sort-btn" id="sort-pos-btn" onclick="cycleSort('positive')" title="Sort by tally">↕</button>
+        <button class="add-btn" onclick="openAddModal('positive')">＋</button>
+      </div>
+    </div>
+    <div id="positive-list"></div>
+
+    <div class="section-head">
+      <span class="section-title">❌ Bad</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="sort-btn" id="sort-neg-btn" onclick="cycleSort('negative')" title="Sort by tally">↕</button>
+        <button class="add-btn" onclick="openAddModal('negative')">＋</button>
+      </div>
+    </div>
+    <div id="negative-list"></div>
   </div>
 
-  <div id="monkey-wrap">
-    <div id="monkey-fruit"></div>
-    <div id="monkey">🐒</div>
-    <div id="monkey-speech"></div>
+  <!-- STATS -->
+  <div class="panel" id="panel-stats">
+    <div id="stats-capture-area">
+      <header>
+        <div>
+          <div class="wordmark">streak<span>.</span></div>
+        </div>
+        <button class="share-btn" onclick="shareStats()" title="Share stats">↑</button>
+      </header>
+      <div id="stat-grid-wrap">
+        <div class="stat-grid" id="stat-grid"></div>
+      </div>
+    </div>
+    <div class="section-head">
+      <span class="section-title" id="chart-title">📅 Last 7 days</span>
+      <div class="chart-toggle">
+        <button class="chart-toggle-btn active" id="ct-days" onclick="setChartPeriod('days', this)">7D</button>
+        <button class="chart-toggle-btn" id="ct-weeks" onclick="setChartPeriod('weeks', this)">7W</button>
+        <button class="chart-toggle-btn" id="ct-months" onclick="setChartPeriod('months', this)">7M</button>
+      </div>
+    </div>
+    <select id="chart-activity-select" class="chart-activity-select" onchange="setChartActivity(this.value)">
+      <option value="">All activities (XP)</option>
+    </select>
+    <div id="bar-chart" class="bar-chart"></div>
+    <div id="bar-labels" class="bar-labels"></div>
+    <div id="bar-scores" class="bar-scores"></div>
+    <div id="bar-weights" class="bar-weights"></div>
+
+    <div class="section-head" style="margin-top:28px;">
+      <span class="section-title">🏆 Personal bests</span>
+    </div>
+    <div id="pb-list"></div>
   </div>
 
-  <div class="fruit-row">
-    <div class="stat-fruit" id="fruit-slot-0"></div>
-    <div class="stat-fruit" id="fruit-slot-1"></div>
-    <div class="stat-fruit" id="fruit-slot-2"></div>
-    <div class="stat-fruit" id="fruit-slot-3"></div>
-    <div class="stat-fruit" id="fruit-slot-4"></div>
-    <div class="stat-fruit" id="fruit-slot-5"></div>
+  <!-- SETTINGS -->
+  <div class="panel" id="panel-settings">
+    <header>
+      <div>
+        <div class="wordmark">streak<span>.</span></div>
+      </div>
+    </header>
+
+    <div class="settings-group">
+      <div class="settings-group-title">Data</div>
+      <div class="settings-row">
+        <div class="settings-item">
+          <div class="settings-item-icon">↺</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label">Reset today</div>
+            <div class="settings-item-desc">Clear all of today's logs</div>
+          </div>
+          <div class="settings-item-action">
+            <button class="settings-btn" onclick="resetToday()">Reset</button>
+          </div>
+        </div>
+        <div class="settings-item">
+          <div class="settings-item-icon">📤</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label">Export data</div>
+            <div class="settings-item-desc">Export all data as JSON</div>
+          </div>
+          <div class="settings-item-action">
+            <button class="settings-btn" onclick="exportData()">Export</button>
+          </div>
+        </div>
+        <div class="settings-item">
+          <div class="settings-item-icon">📥</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label">Import data</div>
+            <div class="settings-item-desc">Restore from a previously exported file</div>
+          </div>
+          <div class="settings-item-action">
+            <button class="settings-btn" onclick="document.getElementById('import-file').click()">Import</button>
+            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+          </div>
+        </div>
+        <div class="settings-item">
+          <div class="settings-item-icon">🗑️</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label">Clear all data</div>
+            <div class="settings-item-desc">Clear all personalised data and restore to initial conditions</div>
+          </div>
+          <div class="settings-item-action">
+            <button class="settings-btn danger" onclick="clearAllData()">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">App</div>
+      <div class="settings-row">
+        <div class="settings-item" id="install-item" style="display:none">
+          <div class="settings-item-icon" id="install-icon">📲</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label" id="install-label">Install app</div>
+            <div class="settings-item-desc" id="install-desc">Add Streak to your home screen</div>
+          </div>
+          <div class="settings-item-action">
+            <button class="settings-btn" id="install-btn" onclick="triggerInstall()">Install</button>
+          </div>
+        </div>
+        <div class="settings-item">
+          <div class="settings-item-icon">🔄</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label">Update app</div>
+            <div class="settings-item-desc">Saves your data, clears cache, and reloads the latest version</div>
+          </div>
+          <div class="settings-item-action">
+            <button class="settings-btn" onclick="updateApp()">Update</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">Setup guide</div>
+      <div class="setup-guide">
+        <div class="setup-step">
+          <div class="setup-num">1</div>
+          <div class="setup-text">
+            <div class="setup-title">Add your activities</div>
+            <div class="setup-desc">On the Log tab, tap ＋ to add a good activity or a bad one to avoid. Give it a name, points value, and icon.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="setup-num">2</div>
+          <div class="setup-text">
+            <div class="setup-title">Set active days</div>
+            <div class="setup-desc">In the activity editor, choose which days of the week it applies to. Unscheduled days won't break your streak.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="setup-num">3</div>
+          <div class="setup-text">
+            <div class="setup-title">Log each day</div>
+            <div class="setup-desc">Tap + to log an activity. Tap − to undo. Good activities add XP; bad activities deduct XP when logged.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="setup-num">4</div>
+          <div class="setup-text">
+            <div class="setup-title">Track weight</div>
+            <div class="setup-desc">Enable weight tracking in the activity editor to log the weight used each time you tap +. Your personal best weight is shown on the Stats tab.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="setup-num">5</div>
+          <div class="setup-text">
+            <div class="setup-title">Install as an app</div>
+            <div class="setup-desc">In your browser menu, tap "Add to home screen" to install Streak as a PWA. The Install button above will appear if your browser supports it.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="setup-num">6</div>
+          <div class="setup-text">
+            <div class="setup-title">Back up your data</div>
+            <div class="setup-desc">Use Export in the Data section to save a JSON backup. Import it on a new device or after clearing the app.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">Feedback</div>
+      <div class="settings-row">
+        <div class="settings-item">
+          <div class="settings-item-icon">💬</div>
+          <div class="settings-item-info">
+            <div class="settings-item-label">Issues & suggestions</div>
+            <div class="settings-item-desc">Report a bug or request a feature on GitHub</div>
+          </div>
+          <div class="settings-item-action">
+            <a href="https://github.com/sambayford/streak/issues" target="_blank" rel="noopener" class="settings-btn" style="text-decoration:none;display:inline-block">Open</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">What's new</div>
+      <div class="changelog">
+
+        <div class="cl-entry">
+          <div class="cl-version">v76 — Current</div>
+          <ul class="cl-list">
+            <li>Weight records cleared when an activity's count is reduced to 0 for the day</li>
+            <li>Decrementing count now also removes the most recent weight entry to stay in sync</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v75</div>
+          <ul class="cl-list">
+            <li>Activity selector added above the bar chart</li>
+            <li>Selecting an activity filters the chart to show its count per day/week/month</li>
+            <li>Below each bar shows ×count, plus weights logged if the activity tracks weight</li>
+            <li>"All activities (XP)" option restores the original score-based chart</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v74</div>
+          <ul class="cl-list">
+            <li>Reverted wordmark position to original header layout, consistent across all tabs</li>
+            <li>Stat cards restored to full original width</li>
+            <li>Share capture now includes header with logo, share button hidden in the screenshot</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v73</div>
+          <ul class="cl-list">
+            <li>Streak logo now included in the shared stats image</li>
+            <li>Stats header simplified — wordmark moved inside the shareable card</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v72</div>
+          <ul class="cl-list">
+            <li>Feedback section added to Settings linking to GitHub issues page</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v71</div>
+          <ul class="cl-list">
+            <li>Fixed weight tracking toggle invisible after notification CSS was removed</li>
+            <li>Weight section now uses its own CSS classes independent of reminder styles</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v70</div>
+          <ul class="cl-list">
+            <li>Fixed missing step 5 in setup guide — weight tracking added as step 4, install and backup renumbered to 5 and 6</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v69</div>
+          <ul class="cl-list">
+            <li>Notifications removed from the app entirely</li>
+            <li>Reminder CSS, JS functions, and settings group all cleaned up</li>
+            <li>Setup guide step 4 updated to cover weight tracking instead of reminders</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v68</div>
+          <ul class="cl-list">
+            <li>Today's XP always shown in red regardless of value</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v67</div>
+          <ul class="cl-list">
+            <li>Stat cards now each have a unique colour: gold, green, purple, green/red</li>
+            <li>Best day changed from purple to green</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v66</div>
+          <ul class="cl-list">
+            <li>Share text updated to "Level up your life:" before the link</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v65</div>
+          <ul class="cl-list">
+            <li>Share text now reads "Start tracking your XP:" before the link</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v64</div>
+          <ul class="cl-list">
+            <li>Share button added to Stats tab header</li>
+            <li>Captures stat cards as an image and opens the device share sheet</li>
+            <li>Includes link to sambayford.github.io/streak in the share text</li>
+            <li>Falls back to downloading the image if sharing isn't supported</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v63</div>
+          <ul class="cl-list">
+            <li>Level card now shows all-time XP / XP needed for next level</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v62</div>
+          <ul class="cl-list">
+            <li>Level and total XP combined into one stat card showing Level N and XP progress</li>
+            <li>4th stat card now shows today's XP (green positive, red negative)</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v61</div>
+          <ul class="cl-list">
+            <li>Replaced "task" / "tasks" with "activity" / "activities" throughout</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v60</div>
+          <ul class="cl-list">
+            <li>Active tab now shown with a filled rounded pill (Chrome-style) instead of a top bar</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v59</div>
+          <ul class="cl-list">
+            <li>Modal title changed from "New task" to "New"</li>
+            <li>Tab labels removed — emoji icons only</li>
+            <li>Active tab indicated by a purple pill above the icon (modern browser style)</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v58</div>
+          <ul class="cl-list">
+            <li>Removed the word "habit" from the entire app UI</li>
+            <li>Log tab sections renamed to "Good" and "Bad"</li>
+            <li>Edit screen modal title is now just "Edit"</li>
+            <li>Page title and manifest renamed to "Life Tracker"</li>
+            <li>Habits referred to as "tasks" throughout</li>
+            <li>Settings descriptions updated: export, reset, and clear all data</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v57</div>
+          <ul class="cl-list">
+            <li>Score values moved from above bars to below them, between bars and axis labels</li>
+            <li>Cleaner bar chart with scores and labels in two rows beneath</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v56</div>
+          <ul class="cl-list">
+            <li>Log tab icon changed to ➕ emoji</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v55</div>
+          <ul class="cl-list">
+            <li>Log tab icon changed from ✦ to ＋</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v54</div>
+          <ul class="cl-list">
+            <li>Tabs renamed: Today → Log, Progress → Stats</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v53</div>
+          <ul class="cl-list">
+            <li>Progress and Settings panels now show streak. branding instead of page title</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v52</div>
+          <ul class="cl-list">
+            <li>Confetti animation fires when daily PB is reached</li>
+            <li>Score ring turns gold when at or above all-time best</li>
+            <li>🏆 New daily PB! toast shown alongside confetti</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v51</div>
+          <ul class="cl-list">
+            <li>Score ring now scales to your all-time best day — full circle when you match or beat your PB</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v50</div>
+          <ul class="cl-list">
+            <li>Fixed JS error caused by stale reference to removed score-day-label element — habits were not rendering on Today tab</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v49</div>
+          <ul class="cl-list">
+            <li>Score ring moved to date nav row, right of the » button</li>
+            <li>Score circle sized to match the ‹ › » navigation circles</li>
+            <li>Score removed from header top-right</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v48</div>
+          <ul class="cl-list">
+            <li>Replaced 📅 calendar emoji with » double arrow for back-to-today button</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v47</div>
+          <ul class="cl-list">
+            <li>Removed "score" / "today" label from below the score ring</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v46</div>
+          <ul class="cl-list">
+            <li>Removed date from under streak. branding</li>
+            <li>Date selector text reduced and lightened — smaller than the wordmark</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v45</div>
+          <ul class="cl-list">
+            <li>Restored streak. branding top-left and score ring top-right</li>
+            <li>Date navigator moved to its own row below the header</li>
+            <li>Shows "Today" or short past date in large Fraunces text</li>
+            <li>📅 button always visible, dims when on today</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v44</div>
+          <ul class="cl-list">
+            <li>Today tab header redesigned — large date text on left, circular nav buttons on right</li>
+            <li>Shows "Today" when on current day, short date when browsing past</li>
+            <li>📅 calendar button replaces "today" pill — always visible, dims when on today</li>
+            <li>Score ring moved below header as a compact row</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v43</div>
+          <ul class="cl-list">
+            <li>Date navigator arrows and date text made larger on Today tab</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v42</div>
+          <ul class="cl-list">
+            <li>Weight PB merged into habit's PB card rather than a separate card</li>
+            <li>Shows 🏋️ Best weight · 80kg · date as a second line on the card</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v41</div>
+          <ul class="cl-list">
+            <li>Personal best weight shown on Progress tab for weight-tracked habits</li>
+            <li>Displays highest single weight recorded and the date it was set</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v40</div>
+          <ul class="cl-list">
+            <li>Weight tracking option added to habit editor (good habits only)</li>
+            <li>When enabled, tapping + prompts for the weight used (kg)</li>
+            <li>Pre-fills last recorded weight for that habit</li>
+            <li>Today's weights shown in the habit card meta line</li>
+            <li>Weights stored per day alongside tally counts</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v39</div>
+          <ul class="cl-list">
+            <li>Fixed update loop bug where cached v36 triggered false update prompts</li>
+            <li>Update check now adds a cache-busting timestamp to the fetch URL</li>
+            <li>Comparison is now strictly numeric — only prompts if remote is higher than local</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v38</div>
+          <ul class="cl-list">
+            <li>XP can now go negative — bad habits can put you in the red</li>
+            <li>Negative XP shown in red on Progress tab</li>
+            <li>Level stays at 1 when XP is negative</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v37</div>
+          <ul class="cl-list">
+            <li>"Break these" renamed to "Bad habits" throughout</li>
+            <li>Total XP now deducts bad habit logs (floored at 0)</li>
+            <li>Level-up modal added — large centred pop-up requiring acknowledgement</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v36</div>
+          <ul class="cl-list">
+            <li>Removed "hold to edit" text from all habit cards</li>
+            <li>Setup guide added to Settings with 6 steps covering all key features</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v35</div>
+          <ul class="cl-list">
+            <li>Chart period toggle: switch between last 7 days, 7 weeks, 7 months</li>
+            <li>Weekly view sums scores across each 7-day block</li>
+            <li>Monthly view sums scores across all days in each calendar month</li>
+            <li>Current period always highlighted purple on the right</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v34</div>
+          <ul class="cl-list">
+            <li>Removed duplicate best day card from personal bests list (already shown in stat grid)</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v33</div>
+          <ul class="cl-list">
+            <li>Replaced 7-day points stat with total accumulated XP</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v32</div>
+          <ul class="cl-list">
+            <li>Removed best streak and level bar from Today tab</li>
+            <li>Level tile on Progress tab now shows XP remaining to next level</li>
+            <li>Fixed duplicate notification banner element</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v31</div>
+          <ul class="cl-list">
+            <li>Habit active days selector added to habit editor</li>
+            <li>Streak only counts scheduled days — unscheduled days are skipped</li>
+            <li>Active days shown in habit card meta line when not every day</li>
+            <li>Day selector hidden for break habits (they always track daily)</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v30</div>
+          <ul class="cl-list">
+            <li>Level up system added — XP earned from positive habit logs</li>
+            <li>50 levels with exponential XP thresholds and unique titles</li>
+            <li>Level progress bar shown on Today tab below streak</li>
+            <li>Toast notification on level up</li>
+            <li>Level and total XP shown on Progress tab stats</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v29</div>
+          <ul class="cl-list">
+            <li>Reset today moved from its own section into the Data section</li>
+            <li>Day section removed from Settings</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v28</div>
+          <ul class="cl-list">
+            <li>Streaks are now tracked per habit, not across all habits</li>
+            <li>Good habits: streak = consecutive days with at least one log</li>
+            <li>Break habits: streak = consecutive days with nothing logged</li>
+            <li>🔥 streak shown on each habit card in the meta line</li>
+            <li>Personal bests shows streak for each habit; break habits show days clean</li>
+            <li>Overall streak row shows best streak across all positive habits</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v27</div>
+          <ul class="cl-list">
+            <li>Update check runs once on load only, not repeatedly</li>
+            <li>User is asked to confirm before update proceeds</li>
+            <li>Confirmation shows the new version number</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v26</div>
+          <ul class="cl-list">
+            <li>Auto-update now driven by APP_VERSION in index.html, not sw.js</li>
+            <li>Page fetches index.html every 5 minutes and compares version strings</li>
+            <li>sw.js is now stable and never needs to change between releases</li>
+            <li>Only index.html needs uploading for future updates</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v25</div>
+          <ul class="cl-list">
+            <li>Date navigator on Today tab — tap ‹ › to browse past days</li>
+            <li>Tallies are editable for any past day</li>
+            <li>Score ring and habit counts reflect the viewed date</li>
+            <li>"today" pill jumps back to current day</li>
+            <li>› button disabled when viewing today (can't go to future)</li>
+            <li>Streak always tracks real today regardless of viewed date</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v24</div>
+          <ul class="cl-list">
+            <li>Auto-update on load: detects new SW, silently saves data, clears cache, reloads</li>
+            <li>SW polls for updates every 60s while page is open</li>
+            <li>If a new SW is already waiting, triggers skip immediately</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v23</div>
+          <ul class="cl-list">
+            <li>Install / Reinstall button added to Settings</li>
+            <li>Shows "Install" in browser, "Reinstall" when already running as PWA</li>
+            <li>Button hidden if install prompt is unavailable</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v22</div>
+          <ul class="cl-list">
+            <li>Changelog renumbered so every HTML file output counts as a version</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v21</div>
+          <ul class="cl-list">
+            <li>Fixed stray &lt;/div&gt; inside v2 changelog entry causing broken layout</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v20</div>
+          <ul class="cl-list">
+            <li>Changelog added to settings with full version history</li>
+            <li>Tally sort and alphabetical sort both available via ↕ button</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v19</div>
+          <ul class="cl-list">
+            <li>Tally chips at top of each section removed</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v18</div>
+          <ul class="cl-list">
+            <li>Sort by tally (low→high, high→low) and alphabetically (A↑, A↓)</li>
+            <li>Tally chip row added below section headers showing today's counts</li>
+            <li>Drag handle dims and disables when a sort is active</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v17</div>
+          <ul class="cl-list">
+            <li>Drag to reorder habits within each group</li>
+            <li>Long-press still opens edit modal; drag handle initiates reorder</li>
+            <li>Desktop mouse drag also supported</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v16</div>
+          <ul class="cl-list">
+            <li>Personal best tracking per positive habit (highest single-day count)</li>
+            <li>Overall best day score tracks across all history</li>
+            <li>Personal bests section added to Progress tab</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v15</div>
+          <ul class="cl-list">
+            <li>7-day history switched to vertical bar chart</li>
+            <li>Today's bar highlighted in purple on the right</li>
+            <li>Best day stat card now uses all-time data, not just last 7 days</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v14</div>
+          <ul class="cl-list">
+            <li>Fixed day rollover using local device timezone instead of UTC</li>
+            <li>Streak yesterday calculation also fixed for local time</li>
+            <li>7-day history dates fixed to match local calendar</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v13</div>
+          <ul class="cl-list">
+            <li>SW rewritten to use flat reminder list generated from habits</li>
+            <li>Hourly reminders expanded into individual per-hour entries</li>
+            <li>Reminders tab fully removed; two-tab nav (Today, Progress)</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v12</div>
+          <ul class="cl-list">
+            <li>Per-habit reminders added to habit editor (once, weekdays, weekends, hourly)</li>
+            <li>Hourly mode lets you set a from/to time range</li>
+            <li>🔔 badge shown on habit card when reminder is active</li>
+            <li>Settings tab added with reset, notifications, export, import, clear data</li>
+            <li>Update app button: saves data, clears cache, reloads, restores data</li>
+            <li>Data export downloads a dated JSON backup file</li>
+            <li>Data import restores from a backup with confirmation</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v11</div>
+          <ul class="cl-list">
+            <li>Nav tab alignment fixed — equal width flex tabs, no padding offset</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v10</div>
+          <ul class="cl-list">
+            <li>SW v2: heartbeat every 60s while app is open triggers time check</li>
+            <li>SW now receives full reminder list via SCHEDULE message</li>
+            <li>Page listens for GET_REMINDERS from SW and responds</li>
+            <li>periodicSync registered at 1-minute interval for Android background wake</li>
+            <li>Test notification button added to Reminders tab</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v9</div>
+          <ul class="cl-list">
+            <li>Service worker added for background notifications (sw.js)</li>
+            <li>Reminders tab with per-reminder on/off toggle and delete</li>
+            <li>Notification permission banner shown if not yet granted</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v8</div>
+          <ul class="cl-list">
+            <li>Undo removed — + and − buttons serve the same purpose</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v7</div>
+          <ul class="cl-list">
+            <li>Habits can be logged multiple times per day with + / − buttons</li>
+            <li>Count shown on card; running total displayed (×3 = +30 pts)</li>
+            <li>− button disabled at zero</li>
+            <li>Undo button in toast (later removed in v8)</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v6</div>
+          <ul class="cl-list">
+            <li>Renamed output file to index.html for GitHub Pages</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v5</div>
+          <ul class="cl-list">
+            <li>Progress tab with 7-day horizontal bar history and stat cards</li>
+            <li>Three-tab nav: Today, Reminders, Progress</li>
+            <li>Streak logic and score ring</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v4</div>
+          <ul class="cl-list">
+            <li>Per-reminder on/off toggle and delete in Reminders tab</li>
+            <li>Notification permission banner</li>
+            <li>Reminders stored in state and persisted to localStorage</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v3</div>
+          <ul class="cl-list">
+            <li>Positive and negative habit types with colour coding</li>
+            <li>Points system: positive habits add, negative habits subtract</li>
+            <li>Long-press to edit or delete habits</li>
+            <li>Sample habits seeded on first launch</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v2</div>
+          <ul class="cl-list">
+            <li>Habit tracker app created as single HTML file</li>
+            <li>Add habits with name, points, and emoji icon</li>
+            <li>Daily check-off with streak counter</li>
+            <li>localStorage persistence</li>
+          </ul>
+        </div>
+
+        <div class="cl-entry">
+          <div class="cl-version">v1</div>
+          <ul class="cl-list">
+            <li>Initial release — habit tracker PWA (habits.html)</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
   </div>
-  <div class="actions">
-    <div class="stat-box" style="flex:1">
-      <div class="stat-label">Moves Left</div>
-      <div class="stat-value" id="moves-used-val">5</div>
+
+</div>
+
+<!-- Bottom nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="switchTab('today', this)">
+    <span class="icon">➕</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab('stats', this)">
+    <span class="icon">📊</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab('settings', this)">
+    <span class="icon">⚙️</span>
+  </button>
+</nav>
+
+<!-- Habit Modal -->
+<div class="modal-overlay" id="habit-modal">
+  <div class="modal">
+    <h2 id="modal-title">New</h2>
+
+    <div class="field">
+      <label>Type</label>
+      <div class="type-toggle">
+        <button class="type-btn pos selected" id="type-pos" onclick="setType('positive')">✅ Good</button>
+        <button class="type-btn neg" id="type-neg" onclick="setType('negative')">❌ Bad</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Name</label>
+      <input type="text" id="habit-name-input" placeholder="e.g. Morning run" maxlength="40">
+    </div>
+    <div class="field">
+      <label>Points (1–20)</label>
+      <input type="number" id="habit-pts-input" value="5" min="1" max="20">
+    </div>
+    <div class="field">
+      <label>Icon</label>
+      <div class="emoji-custom-row">
+        <input type="text" id="emoji-custom-input" placeholder="Or type any emoji…" maxlength="4" oninput="onCustomEmoji(this)">
+      </div>
+      <div class="emoji-grid" id="emoji-grid"></div>
+    </div>
+
+    <div class="field" id="days-field">
+      <label>Active days</label>
+      <div class="days-picker" id="days-picker">
+        <button type="button" class="day-btn" data-day="1">M</button>
+        <button type="button" class="day-btn" data-day="2">T</button>
+        <button type="button" class="day-btn" data-day="3">W</button>
+        <button type="button" class="day-btn" data-day="4">T</button>
+        <button type="button" class="day-btn" data-day="5">F</button>
+        <button type="button" class="day-btn" data-day="6">S</button>
+        <button type="button" class="day-btn" data-day="0">S</button>
+      </div>
+      <p class="days-hint" id="days-hint">Every day</p>
+    </div>
+
+    <div class="weight-section" id="weight-section">
+      <div class="weight-section-head">
+        <span class="weight-section-title">🏋️ Track weight</span>
+        <button class="weight-toggle" id="weight-toggle-btn" onclick="toggleWeightTracking()"></button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px;display:none" id="weight-hint">Each time you tap + you'll be prompted to enter the weight used.</p>
+    </div>
+
+    <div class="modal-actions" id="habit-modal-actions">
+      <button class="btn-secondary" onclick="closeModal('habit-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveHabit()">Save habit</button>
     </div>
   </div>
 </div>
 
-<div id="overlay">
-  <div class="overlay-card">
-    <div class="overlay-title" id="ol-title">Level Complete!</div>
-    <div class="overlay-moves" id="ol-moves"></div>
-    <div id="ol-hiscore-wrap" style="font-size:0.7rem;color:var(--gold);letter-spacing:0.12em;margin:4px 0 16px;display:none">🏆 New Best Level!</div>
-    <button class="overlay-btn" id="ol-btn">Next Level</button>
+<!-- Level Up Modal -->
+<div class="modal-overlay levelup-overlay" id="levelup-modal">
+  <div class="levelup-modal">
+    <div class="lu-stars" id="lu-stars">✨🎉✨</div>
+    <div class="lu-heading">Level Up!</div>
+    <div class="lu-level" id="lu-level">Level 2</div>
+    <div class="lu-title" id="lu-title">Motivated</div>
+    <p class="lu-msg">Keep building those good activities. Your streak is paying off.</p>
+    <button class="lu-btn" onclick="closeLevelUpModal()">Let's go! 🚀</button>
   </div>
 </div>
 
+<canvas id="confetti-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:400;display:none"></canvas>
+
+<div class="toast" id="toast"></div>
+
 <script>
-const COLS = 8, ROWS = 8;
-const GEM_TYPES = 6;
-const GEM_EMOJI = ['🍉','🍇','🍏','🍌','🍊','🫐'];
+const APP_VERSION = '77';
 
-const SAVE_KEY = 'fruitCascade_save';
-const BEST_KEY = 'fruitCascade_best';
+const EMOJIS = ['🏃','💪','🥗','💧','📚','🧘','😴','🚴','🎯','✍️','🎨','🌿',
+  '🍎','☕','🧠','💊','🚶','🏊','🎸','🌅','🧹','💰','🛁','📱','🍷','🍔','🎮','📺'];
 
-let board = [];
-let special = []; // parallel board: null | 'glowing'
-let level = 1, moves = 5, baseMoves = 5, movesUsed = 0, bestLevel = 1, hints = 3;
-let lastSwapped = null;
-let fruitTargets = [], fruitCollected = [];
-let selected = null, busy = false, touchStart = null;
+// ─── State ────────────────────────────────────────────────────────────────────
+let state = loadState();
 
-const boardEl     = document.getElementById('board');
-const movesUsedEl = document.getElementById('moves-used-val');
-const overlay     = document.getElementById('overlay');
-
-// ── Utilities ──────────────────────────────────────────────────────────────
-
-function rnd(n) { return Math.floor(Math.random() * n); }
-function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-// ── Board ──────────────────────────────────────────────────────────────────
-
-function levelFruitTargets(lvl) {
-  const count = lvl * 3;
-  return Array.from({ length: GEM_TYPES }, () => count);
-}
-function initTargets() {
-  fruitTargets   = levelFruitTargets(level);
-  fruitCollected = Array(GEM_TYPES).fill(0);
-}
-function allTargetsMet() {
-  return fruitTargets.every((t, i) => (fruitCollected[i] || 0) >= t);
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem('streak_v3') || '{}');
+    return {
+      habits: s.habits || [],
+      log: s.log || {},
+      habitStreaks: s.habitStreaks || {}, // { [id]: { streak, lastActive } }
+    };
+  } catch { return { habits: [], log: {}, habitStreaks: {} }; }
 }
 
-function newBoard() {
-  board = []; special = [];
-  for (let r = 0; r < ROWS; r++) {
-    board[r] = []; special[r] = [];
-    for (let c = 0; c < COLS; c++) {
-      board[r][c] = safePick(r, c);
-      special[r][c] = null;
-    }
-  }
+function save() { localStorage.setItem('streak_v3', JSON.stringify(state)); }
+
+let viewOffset = 0; // 0 = today, -1 = yesterday, etc.
+
+const makeKey = (offset = 0) => {
+  const d = new Date(); d.setDate(d.getDate() + offset);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
+const todayKey = () => makeKey(0);
+const viewKey  = () => makeKey(viewOffset);
+const todayLog = () => state.log[viewKey()] || {};
+
+function shiftDay(delta) {
+  const next = viewOffset + delta;
+  if (next > 0) return; // can't go into the future
+  viewOffset = next;
+  renderToday();
 }
 
-function safePick(r, c) {
-  const bad = new Set();
-  if (c >= 2 && board[r][c-1] === board[r][c-2]) bad.add(board[r][c-1]);
-  if (r >= 2 && board[r-1] && board[r-2] && board[r-1][c] === board[r-2][c]) bad.add(board[r-1][c]);
-  let g;
-  do { g = rnd(GEM_TYPES); } while (bad.has(g));
-  return g;
+function goToToday() {
+  viewOffset = 0;
+  renderToday();
 }
 
-function swapCells(r1, c1, r2, c2) {
-  const tmp = board[r1][c1];
-  board[r1][c1] = board[r2][c2];
-  board[r2][c2] = tmp;
-  const ts = special[r1][c1];
-  special[r1][c1] = special[r2][c2];
-  special[r2][c2] = ts;
+// sort: 'manual' | 'az' | 'za' | 'asc' | 'desc'
+const sortState = { positive: 'manual', negative: 'manual' };
+
+let chartPeriod = 'days'; // 'days' | 'weeks' | 'months'
+let chartActivityId = ''; // '' = all activities (XP mode), else specific activity id
+
+function setChartActivity(id) {
+  chartActivityId = id;
+  renderChart();
 }
 
-// Returns {cells, type, dir, pivot} per match-group, plus flat cell list
-function getMatchGroups() {
-  const groups = [];
-  const counted = new Set();
-  // Horizontal groups
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS - 2; c++) {
-      const g = board[r][c];
-      if (g === null) continue;
-      if (g === board[r][c+1] && g === board[r][c+2]) {
-        let len = 3;
-        while (c + len < COLS && board[r][c+len] === g) len++;
-        const cells = [];
-        for (let i = 0; i < len; i++) cells.push([r, c+i]);
-        groups.push({ cells, len, dir: 'h', pivot: [r, c + Math.floor(len/2)], gemType: g });
-        c += len - 1;
-      }
-    }
-  }
-  // Vertical groups
-  for (let c = 0; c < COLS; c++) {
-    for (let r = 0; r < ROWS - 2; r++) {
-      const g = board[r][c];
-      if (g === null) continue;
-      if (g === board[r+1][c] && g === board[r+2][c]) {
-        let len = 3;
-        while (r + len < ROWS && board[r+len][c] === g) len++;
-        const cells = [];
-        for (let i = 0; i < len; i++) cells.push([r+i, c]);
-        groups.push({ cells, len, dir: 'v', pivot: [r + Math.floor(len/2), c], gemType: g });
-        r += len - 1;
-      }
-    }
-  }
-  // Flat unique cell list
-  const hitSet = new Set();
-  for (const g of groups) for (const [r,c] of g.cells) hitSet.add(r*COLS+c);
-  const allCells = [...hitSet].map(idx => [Math.floor(idx/COLS), idx%COLS]);
-  return { groups, allCells };
+function populateChartActivitySelect() {
+  const sel = document.getElementById('chart-activity-select');
+  if (!sel) return;
+  const current = chartActivityId;
+  sel.innerHTML = '<option value="">All activities (XP)</option>' +
+    state.habits.map(h => `<option value="${h.id}">${h.icon} ${h.name}</option>`).join('');
+  // Restore selection if still valid, else reset
+  if (state.habits.some(h => h.id === current)) sel.value = current;
+  else { chartActivityId = ''; sel.value = ''; }
 }
 
-function getMatches() {
-  return getMatchGroups().allCells;
+function setChartPeriod(period, btn) {
+  chartPeriod = period;
+  document.querySelectorAll('.chart-toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const titles = { days: '📅 Last 7 days', weeks: '📅 Last 7 weeks', months: '📅 Last 7 months' };
+  document.getElementById('chart-title').textContent = titles[period];
+  renderChart();
 }
 
-function hasValidMove() {
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      if (c < COLS - 1) {
-        swapCells(r, c, r, c+1);
-        const ok = getMatches().length > 0;
-        swapCells(r, c, r, c+1);
-        if (ok) return true;
-      }
-      if (r < ROWS - 1) {
-        swapCells(r, c, r+1, c);
-        const ok = getMatches().length > 0;
-        swapCells(r, c, r+1, c);
-        if (ok) return true;
-      }
-    }
-  }
-  return false;
+function cycleSort(type) {
+  const order = ['manual', 'az', 'za', 'asc', 'desc'];
+  const cur = sortState[type];
+  sortState[type] = order[(order.indexOf(cur) + 1) % order.length];
+  const labels = { manual: '↕', az: 'A↑', za: 'A↓', asc: '#↑', desc: '#↓' };
+  const btn = document.getElementById(`sort-${type === 'positive' ? 'pos' : 'neg'}-btn`);
+  btn.textContent = labels[sortState[type]];
+  btn.classList.toggle('active', sortState[type] !== 'manual');
+  renderHabitList(type);
 }
 
-function shuffleBoard() {
-  const flat = board.flat().filter(g => g !== null);
-  let attempts = 0;
-  do {
-    for (let i = flat.length - 1; i > 0; i--) {
-      const j = rnd(i + 1);
-      [flat[i], flat[j]] = [flat[j], flat[i]];
-    }
-    let idx = 0;
-    for (let r = 0; r < ROWS; r++)
-      for (let c = 0; c < COLS; c++)
-        board[r][c] = flat[idx++];
-    attempts++;
-  } while ((getMatches().length > 0 || !hasValidMove()) && attempts < 200);
-}
-
-function safeRandom(r, c) {
-  // Try each possible gem type and reject any that would form a 3-in-a-row
-  // by temporarily placing it and checking matches in its neighbourhood only.
-  const candidates = [];
-  for (let g = 0; g < GEM_TYPES; g++) {
-    board[r][c] = g;
-    // Check horizontal runs touching this cell
-    let hOk = true;
-    const hStart = Math.max(0, c - 2);
-    const hEnd   = Math.min(COLS - 3, c);
-    for (let cc = hStart; cc <= hEnd; cc++) {
-      if (board[r][cc] !== null && board[r][cc] === board[r][cc+1] && board[r][cc] === board[r][cc+2]) { hOk = false; break; }
-    }
-    // Check vertical runs touching this cell
-    let vOk = true;
-    const vStart = Math.max(0, r - 2);
-    const vEnd   = Math.min(ROWS - 3, r);
-    for (let rr = vStart; rr <= vEnd; rr++) {
-      if (board[rr][c] !== null && board[rr][c] === board[rr+1][c] && board[rr][c] === board[rr+2][c]) { vOk = false; break; }
-    }
-    if (hOk && vOk) candidates.push(g);
-    board[r][c] = null;
-  }
-  // Pick randomly from safe candidates; fall back to full random if none (shouldn't happen)
-  return candidates.length ? candidates[rnd(candidates.length)] : rnd(GEM_TYPES);
-}
-
-function dropAndFill() {
-  const newCells = new Set();
-  for (let c = 0; c < COLS; c++) {
-    // Compact downward (carry specials with their fruit)
-    let empty = ROWS - 1;
-    for (let r = ROWS - 1; r >= 0; r--) {
-      if (board[r][c] !== null) {
-        board[empty][c]   = board[r][c];
-        special[empty][c] = special[r][c];
-        if (empty !== r) { board[r][c] = null; special[r][c] = null; }
-        empty--;
-      }
-    }
-    // Fill top
-    for (let r = 0; r <= empty; r++) {
-      board[r][c]   = safeRandom(r, c);
-      special[r][c] = null;
-      newCells.add(r * COLS + c);
-    }
-  }
-  return newCells;
-}
-
-// ── Rendering ──────────────────────────────────────────────────────────────
-
-function cell(r, c) { return boardEl.children[r * COLS + c]; }
-
-function render(newCells = new Set()) {
-  boardEl.innerHTML = '';
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      const div = document.createElement('div');
-      div.className = 'cell';
-      div.dataset.r = r;
-      div.dataset.c = c;
-      const g = board[r][c];
-      if (g !== null) {
-        const gem = document.createElement('div');
-        gem.className = 'gem gem-' + g;
-        gem.textContent = GEM_EMOJI[g];
-        if (special[r] && special[r][c]) gem.classList.add('glowing');
-        if (newCells.has(r * COLS + c)) div.classList.add('drop-in');
-        div.appendChild(gem);
-      } else {
-        div.classList.add('empty');
-      }
-      div.addEventListener('pointerdown', onPointerDown);
-      boardEl.appendChild(div);
-    }
-  }
-  updateUI();
-}
-
-function updateUI() {
-  movesUsedEl.textContent = moves;
-  renderFruitTargets();
-}
-
-function renderFruitTargets() {
-  for (let g = 0; g < GEM_TYPES; g++) {
-    const el = document.getElementById('fruit-slot-' + g);
-    if (!el) continue;
-    const tgt       = fruitTargets[g] || 0;
-    const collected = Math.min(fruitCollected[g] || 0, tgt);
-    const done      = collected >= tgt;
-    el.className = 'stat-fruit' + (done ? ' done' : '');
-    el.innerHTML = '<span class="sf-emoji">' + GEM_EMOJI[g] + '</span>' +
-                   '<span class="sf-count">' + collected + '/' + tgt + '</span>' +
-                   '<span class="sf-check">✓</span>';
-  }
-}
-
-// ── Combo display ──────────────────────────────────────────────────────────
-
-// ── Cascade ────────────────────────────────────────────────────────────────
-
-// Collect all cells to clear, respecting special effects (chain reaction)
-function collectClear(initialCells) {
-  const toNull = new Set();
-  const queue = [...initialCells];
-  while (queue.length) {
-    const [r, c] = queue.shift();
-    const key = r * COLS + c;
-    if (toNull.has(key)) continue;
-    toNull.add(key);
-    const sp = special[r] && special[r][c];
-    if (sp === 'glowing') {
-      // Clear all fruit of the same type on the board
-      const gemType = board[r][c];
-      for (let rr = 0; rr < ROWS; rr++)
-        for (let cc = 0; cc < COLS; cc++)
-          if (board[rr][cc] === gemType)
-            queue.push([rr, cc]);
-    }
-  }
-  return [...toNull].map(idx => [Math.floor(idx/COLS), idx%COLS]);
-}
-
-async function cascade(combo) {
-  const { groups, allCells } = getMatchGroups();
-  if (!allCells.length) return;
-
-  // Determine which cells to clear (including special chain reactions)
-  const clearCells = collectClear(allCells);
-  const clearSet = new Set(clearCells.map(([r,c]) => r*COLS+c));
-
-  // Determine where to place special fruit (before clearing)
-  const newSpecials = []; // [{r,c,kind,gemType}]
-  const usedGroups = new Set();
-
-  // Check for L/T shapes: two groups of the same fruit type that share a cell
-  for (let i = 0; i < groups.length; i++) {
-    for (let j = i + 1; j < groups.length; j++) {
-      const a = groups[i], b = groups[j];
-      if (a.gemType !== b.gemType) continue;
-      if (a.dir === b.dir) continue; // must be perpendicular
-      const hasSpecial = [...a.cells, ...b.cells].some(([r,c]) => special[r][c]);
-      if (hasSpecial) continue;
-      // Find shared cell (the corner of the L)
-      const bSet = new Set(b.cells.map(([r,c]) => r*COLS+c));
-      const shared = a.cells.find(([r,c]) => bSet.has(r*COLS+c));
-      if (shared) {
-        const totalCells = new Set([...a.cells, ...b.cells].map(([r,c]) => r*COLS+c));
-        if (totalCells.size >= 5) {
-          const allLCells = [...a.cells, ...b.cells];
-          let pr = shared[0], pc = shared[1];
-          if (lastSwapped && allLCells.some(([r,c]) => r === lastSwapped.r && c === lastSwapped.c)) {
-            pr = lastSwapped.r; pc = lastSwapped.c;
-          }
-          newSpecials.push({ r: pr, c: pc, kind: 'glowing', gemType: a.gemType });
-          usedGroups.add(i);
-          usedGroups.add(j);
-        }
-      }
-    }
-  }
-
-  // Remaining groups: straight match of 4+
-  for (let i = 0; i < groups.length; i++) {
-    if (usedGroups.has(i)) continue;
-    const { len, pivot, gemType, cells } = groups[i];
-    const hasSpecialInGroup = cells.some(([r,c]) => special[r][c]);
-    if (!hasSpecialInGroup && len >= 4) {
-      let pr = pivot[0], pc = pivot[1];
-      if (lastSwapped && cells.some(([r,c]) => r === lastSwapped.r && c === lastSwapped.c)) {
-        pr = lastSwapped.r; pc = lastSwapped.c;
-      }
-      newSpecials.push({ r: pr, c: pc, kind: 'glowing', gemType });
-    }
-  }
-
-  // Hide matched gems and capture their types for flying clones
-  // Build sets: cells that merge into a pivot vs cells that fly to monkey
-  // Each newSpecial has a pivot and the group cells that feed into it
-  const mergePivotMap = new Map(); // key="r,c" -> pivot {r,c}
-  const pivotSet = new Set();
-  for (const ns of newSpecials) {
-    pivotSet.add(ns.r * COLS + ns.c);
-    // Find the group(s) that created this special and mark all their cells
-    for (const grp of groups) {
-      if (grp.cells.some(([gr,gc]) => gr === ns.r && gc === ns.c) ||
-          (grp.gemType === ns.gemType && grp.cells.some(([gr,gc]) => Math.abs(gr-ns.r)+Math.abs(gc-ns.c) <= 2))) {
-        for (const [gr,gc] of grp.cells) {
-          mergePivotMap.set(gr * COLS + gc, ns);
-        }
-      }
-    }
-  }
-
-  // All cleared cells except the pivot fly to the monkey and count as collected.
-  // Pivot cells stay on board as glowing fruit — not counted, not animated away.
-  const flyCells = clearCells.filter(([r,c]) => !pivotSet.has(r*COLS+c));
-  const capturedTypes = flyCells.map(([r,c]) => board[r][c] ?? 0);
-
-  // Sound effect — special activations get bigger sound
-  const hasSpecialClear = clearCells.some(([r,c]) => special[r][c] === 'glowing');
-  if (hasSpecialClear) sfxSpecialActivate(); else sfxMatch(combo);
-
-  // Hide matched cells — but NOT pivot cells (they stay visible and become glowing)
-  clearCells.forEach(([r, c]) => {
-    if (pivotSet.has(r*COLS+c)) return;
-    const el = cell(r, c);
-    if (!el) return;
-    el.classList.add(special[r][c] ? 'matching-special' : 'matching');
-  });
-  // Immediately mark pivot cells as glowing
-  if (pivotSet.size > 0) sfxGlowing();
-  pivotSet.forEach(key => {
-    const r = Math.floor(key/COLS), c = key%COLS;
-    const el = cell(r, c);
-    if (el) el.querySelector('.gem')?.classList.add('glowing');
-  });
-
-  // All non-pivot cells fly to the monkey
-  const flyDuration = flyCells.length > 0 ? flyFruitToMonkey(flyCells, capturedTypes) : 0;
-  const waitDuration = flyDuration;
-
-  // Count all non-pivot cleared fruit as collected
-  const pulsedTypes = new Set();
-  clearCells.forEach(([r,c]) => {
-    if (pivotSet.has(r*COLS+c)) return;
-    const g = board[r][c];
-    if (g != null && g >= 0 && g < GEM_TYPES) {
-      fruitCollected[g] = (fruitCollected[g]||0) + 1;
-      pulsedTypes.add(g);
-    }
-  });
-
-  // Score
-  let basePts = 0;
-  clearCells.forEach(([r,c]) => { basePts += special[r][c] ? 60 : 20; });
-  const multiplier = combo;
-  const pts = basePts * multiplier;
-  updateUI();
-
-  // Pulse the fruit slots that gained a fruit
-  pulsedTypes.forEach(g => {
-    const el = document.getElementById('fruit-slot-' + g);
-    if (!el) return;
-    el.classList.remove('pulse');
-    void el.offsetWidth; // reflow to restart animation
-    el.classList.add('pulse');
-    setTimeout(() => el.classList.remove('pulse'), 500);
-  });
-
-  // Wait for animations, then monkey chomps (only if fruit went to monkey)
-  await delay(Math.max(waitDuration - 80, 300));
-  if (flyCells.length > 0) {
-    monkeyEat(flyCells, combo, capturedTypes);
-    await delay(180);
-  } else {
-    await delay(100);
-  }
-
-  // Clear from data
-  clearCells.forEach(([r, c]) => { board[r][c] = null; special[r][c] = null; });
-
-  // Place new specials
-  for (const { r, c, kind, gemType } of newSpecials) {
-    if (board[r][c] === null) {
-      board[r][c]   = gemType;
-      special[r][c] = kind;
-    }
-  }
-
-  render();
-  await delay(80);
-
-  const fresh = dropAndFill();
-  render(fresh);
-  await delay(380);
-
-  await cascade(combo + 1);
-}
-
-const MONKEY_PHRASES = [
-  'Yum!', 'Mmm!', 'Oo oo!', 'Delish!', 'More!',
-  'Tasty!', 'Ooh ah!', 'Nom!', 'Yes!', 'Combo!'
+// ─── Level system ─────────────────────────────────────────────────────────────
+const LEVEL_TITLES = [
+  'Beginner', 'Motivated', 'Consistent', 'Determined', 'Focused',
+  'Disciplined', 'Committed', 'Resilient', 'Dedicated', 'Persistent',
+  'Unstoppable', 'Driven', 'Purposeful', 'Steadfast', 'Tenacious',
+  'Champion', 'Elite', 'Master', 'Legend', 'Mythic'
 ];
-let monkeyTimer = null;
 
-function monkeyEat(matches, combo, capturedTypes) {
-  const monkeyEl  = document.getElementById('monkey');
-  const fruitEl   = document.getElementById('monkey-fruit');
-  const speechEl  = document.getElementById('monkey-speech');
-
-  // Fruit display is handled by flying clones; just show the last one briefly
-  const [r, c] = matches[Math.floor(Math.random() * matches.length)];
-  const g = capturedTypes ? capturedTypes[0] : (board[r] && board[r][c] != null ? board[r][c] : null);
-  fruitEl.textContent = g !== null ? GEM_EMOJI[g] : GEM_EMOJI[Math.floor(Math.random() * GEM_TYPES)];
-
-  // Pick phrase — extra excitement for combos
-  const phrase = combo >= 3 ? '🔥 Combo!' :
-                 combo === 2 ? 'Again!' :
-                 MONKEY_PHRASES[Math.floor(Math.random() * MONKEY_PHRASES.length)];
-  speechEl.textContent = phrase;
-
-  // Restart animations cleanly
-  monkeyEl.classList.remove('idle', 'chomp');
-  fruitEl.classList.remove('show');
-  speechEl.classList.remove('show');
-  void monkeyEl.offsetWidth; // force reflow
-
-  monkeyEl.classList.add('chomp');
-  fruitEl.classList.add('show');
-  speechEl.classList.add('show');
-
-  if (monkeyTimer) clearTimeout(monkeyTimer);
-  monkeyTimer = setTimeout(() => {
-    monkeyEl.classList.remove('chomp');
-    monkeyEl.classList.add('idle');
-    fruitEl.classList.remove('show');
-    speechEl.classList.remove('show');
-  }, 1000);
+// XP thresholds per level (cumulative XP needed to reach each level)
+function xpForLevel(lvl) {
+  // Level 1 = 0 XP, grows exponentially
+  if (lvl <= 1) return 0;
+  return Math.round(50 * Math.pow(lvl - 1, 1.6));
 }
 
-function mergeFruitToPivot(mergeCells, pivotR, pivotC) {
-  // Fly all cells in mergeCells straight into the pivot cell, then flash it
-  const pivotEl = cell(pivotR, pivotC);
-  if (!pivotEl) return;
-  const pRect = pivotEl.getBoundingClientRect();
-  const destX = pRect.left + pRect.width  / 2;
-  const destY = pRect.top  + pRect.height / 2;
-
-  mergeCells.forEach(([r, c], idx) => {
-    if (r === pivotR && c === pivotC) return; // skip pivot itself
-    const el = cell(r, c);
-    if (!el) return;
-    const cRect = el.getBoundingClientRect();
-    const startX = cRect.left + cRect.width  / 2;
-    const startY = cRect.top  + cRect.height / 2;
-
-    const fly = document.createElement('div');
-    fly.className = 'fly-fruit';
-    fly.textContent = GEM_EMOJI[board[r][c] ?? 0];
-    fly.style.left = startX + 'px';
-    fly.style.top  = startY + 'px';
-    fly.style.transform = 'translate(-50%, -50%) scale(1)';
-    fly.style.opacity = '1';
-    document.body.appendChild(fly);
-
-    const dx = destX - startX;
-    const dy = destY - startY;
-    const dist = Math.sqrt(dx*dx + dy*dy);
-    const mergeDur = Math.round(dist / 0.9);
-    setTimeout(() => {
-      fly.animate([
-        { transform: 'translate(-50%, -50%) scale(1)',   opacity: 1 },
-        { transform: `translate(calc(${dx}px - 50%), calc(${dy}px - 50%)) scale(0.2)`, opacity: 0 }
-      ], { duration: mergeDur, easing: 'ease-in', fill: 'forwards' }).onfinish = () => fly.remove();
-    }, idx * 40);
-  });
+function calcTotalXP() {
+  let xp = 0;
+  for (const [dateKey, log] of Object.entries(state.log)) {
+    for (const h of state.habits) {
+      const count = log[h.id] || 0;
+      if (h.type === 'positive') xp += count * h.pts;
+      else xp -= count * h.pts;
+    }
+  }
+  return xp;
 }
 
-function flyFruitToMonkey(clearCells, capturedTypes) {
-  // Get monkey's screen position (the fruit slot in front of it)
-  const fruitEl  = document.getElementById('monkey-fruit');
-  const monkeyEl = document.getElementById('monkey');
-  const mRect = fruitEl.getBoundingClientRect();
-  const destX = mRect.left + mRect.width / 2;
-  const destY = mRect.top  + mRect.height / 2;
-
-  const SPEED   = 0.9; // px per ms — constant travel speed
-  const STAGGER = 60;  // ms between each fruit launch
-  const maxFly  = Math.min(clearCells.length, 12);
-  let latestArrival = 0;
-
-  clearCells.slice(0, maxFly).forEach(([r, c], idx) => {
-    const el = cell(r, c);
-    if (!el) return;
-    const cRect  = el.getBoundingClientRect();
-    const startX = cRect.left + cRect.width  / 2;
-    const startY = cRect.top  + cRect.height / 2;
-    const dx     = destX - startX;
-    const dy     = destY - startY;
-    const dist   = Math.sqrt(dx*dx + dy*dy);
-    const duration = Math.round(dist / SPEED);
-    const delay_ms = idx * STAGGER;
-    if (delay_ms + duration > latestArrival) latestArrival = delay_ms + duration;
-
-    const fly = document.createElement('div');
-    fly.className   = 'fly-fruit';
-    fly.textContent = GEM_EMOJI[capturedTypes[idx] ?? capturedTypes[0]];
-    fly.style.left  = startX + 'px';
-    fly.style.top   = startY + 'px';
-    fly.style.transform = 'translate(-50%, -50%) scale(1)';
-    fly.style.opacity   = '1';
-    document.body.appendChild(fly);
-
-    setTimeout(() => {
-      fly.animate([
-        { transform: 'translate(-50%, -50%) scale(1)',   opacity: 1 },
-        { transform: `translate(calc(${dx}px - 50%), calc(${dy}px - 50%)) scale(0.5)`, opacity: 0 }
-      ], { duration, easing: 'ease-in', fill: 'forwards' }).onfinish = () => fly.remove();
-    }, delay_ms);
-  });
-
-  return latestArrival + 80; // small buffer after last fruit lands
+function calcLevel(xp) {
+  if (xp <= 0) return 1;
+  let lvl = 1;
+  while (xpForLevel(lvl + 1) <= xp) lvl++;
+  return Math.min(lvl, 50);
 }
 
-function showScorePop([r, c], pts, multiplier = 1) {
-  const el = cell(r, c);
-  if (!el) return;
-  const bRect = boardEl.getBoundingClientRect();
-  const cRect = el.getBoundingClientRect();
-  const pop = document.createElement('div');
-  pop.className = 'score-pop';
-  pop.textContent = '+' + pts + (multiplier >= 2 ? ' ×' + multiplier : '');
-  pop.style.left = (cRect.left - bRect.left + cRect.width / 2) + 'px';
-  pop.style.top  = (cRect.top  - bRect.top) + 'px';
-  boardEl.style.position = 'relative';
-  boardEl.appendChild(pop);
-  pop.addEventListener('animationend', () => pop.remove());
+function renderLevel() {
+  const xp = calcTotalXP();
+  const lvl = calcLevel(xp);
+  const thisLvlXP = xpForLevel(lvl);
+  const nextLvlXP = xpForLevel(lvl + 1);
+  const pct = lvl >= 50 ? 100 : Math.round(((xp - thisLvlXP) / (nextLvlXP - thisLvlXP)) * 100);
+  const title = LEVEL_TITLES[Math.min(lvl - 1, LEVEL_TITLES.length - 1)];
+
+  document.getElementById('level-badge').textContent = `Lvl ${lvl}`;
+  document.getElementById('level-title').textContent = title;
+  document.getElementById('level-xp').textContent = lvl >= 50
+    ? `${xp} XP — Max level!`
+    : `${xp - thisLvlXP} / ${nextLvlXP - thisLvlXP} XP to next level`;
+  document.getElementById('level-bar').style.width = pct + '%';
+
+  // Level up modal
+  const prevLvl = state._displayedLevel || 0;
+  if (prevLvl && lvl > prevLvl) {
+    showLevelUpModal(lvl, title);
+  }
+  state._displayedLevel = lvl;
 }
 
-// ── Input ──────────────────────────────────────────────────────────────────
-
-function onPointerDown(e) {
-  if (busy) return;
-  e.preventDefault();
-  const r = +e.currentTarget.dataset.r;
-  const c = +e.currentTarget.dataset.c;
-  touchStart = { r, c, x: e.clientX, y: e.clientY };
-  e.currentTarget.setPointerCapture(e.pointerId);
-  e.currentTarget.addEventListener('pointerup',   onPointerUp,   { once: true });
-  e.currentTarget.addEventListener('pointermove', onPointerMove);
+function showLevelUpModal(lvl, title) {
+  document.getElementById('lu-level').textContent = `Level ${lvl}`;
+  document.getElementById('lu-title').textContent = title;
+  document.getElementById('lu-stars').textContent = lvl >= 50 ? '🌟🏆🌟' : lvl >= 30 ? '🔥⭐🔥' : lvl >= 10 ? '⭐✨⭐' : '✨🎉✨';
+  document.getElementById('levelup-modal').classList.add('open');
 }
 
-function onPointerMove(e) {
-  if (!touchStart) return;
-  const dx = e.clientX - touchStart.x;
-  const dy = e.clientY - touchStart.y;
-  if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
-    e.currentTarget.removeEventListener('pointermove', onPointerMove);
-    const { r, c } = touchStart;
-    touchStart = null;
-    if (Math.abs(dx) > Math.abs(dy)) trySwap(r, c, r, c + (dx > 0 ? 1 : -1));
-    else                              trySwap(r, c, r + (dy > 0 ? 1 : -1), c);
+function closeLevelUpModal() {
+  document.getElementById('levelup-modal').classList.remove('open');
+}
+function calcHabitStreak(id) {
+  const h = state.habits.find(x => x.id === id);
+  if (!h) return 0;
+  const isBreak = h.type === 'negative';
+  const scheduledDays = (h.days && h.days.length) ? h.days : [0,1,2,3,4,5,6];
+  let streak = 0;
+  let offset = 0;
+  while (offset < 366) {
+    const d = new Date(); d.setDate(d.getDate() - offset);
+    const dow = d.getDay();
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    // For positive habits, skip unscheduled days — they don't break the streak
+    if (!isBreak && !scheduledDays.includes(dow)) { offset++; continue; }
+    const count = (state.log[key] || {})[id] || 0;
+    const active = isBreak ? count === 0 : count > 0;
+    if (!active) break;
+    streak++;
+    offset++;
+  }
+  return streak;
+}
+
+function updateStreaks() {
+  if (!state.habitStreaks) state.habitStreaks = {};
+  for (const h of state.habits) {
+    state.habitStreaks[h.id] = calcHabitStreak(h.id);
   }
 }
 
-function onPointerUp(e) {
-  e.currentTarget.removeEventListener('pointermove', onPointerMove);
-  if (!touchStart) return;
-  const { r, c } = touchStart;
-  touchStart = null;
-  handleTap(r, c);
+// Best overall streak across all positive habits
+function bestStreak() {
+  const positives = state.habits.filter(h => h.type === 'positive');
+  if (!positives.length) return 0;
+  return Math.max(...positives.map(h => state.habitStreaks[h.id] || 0));
 }
 
-function handleTap(r, c) {
-  if (board[r][c] === null) return;
-  if (!selected) {
-    selected = { r, c };
-    cell(r, c).classList.add('selected');
-    return;
+function calcScore(dateKey) {
+  const log = state.log[dateKey] || {};
+  return state.habits.reduce((acc, h) => {
+    const count = log[h.id] || 0;
+    return acc + count * (h.type === 'positive' ? h.pts : -h.pts);
+  }, 0);
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function render() { renderToday(); renderStats(); }
+
+function renderToday() {
+  const isToday = viewOffset === 0;
+  const d = new Date(); d.setDate(d.getDate() + viewOffset);
+
+  // Big date text in the nav row
+  const dateEl = document.getElementById('today-date');
+  dateEl.textContent = isToday
+    ? 'Today'
+    : d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'long' });
+
+  // Subdate removed — no longer shown under wordmark
+
+  document.getElementById('date-next-btn').disabled = isToday;
+  const backBtn = document.getElementById('back-today-btn');
+  backBtn.style.opacity = isToday ? '0.3' : '1';
+  backBtn.style.pointerEvents = isToday ? 'none' : '';
+
+  // score-day-label removed in v49
+
+  const score = calcScore(viewKey());
+  document.getElementById('score-display').textContent = score > 0 ? '+'+score : score;
+
+  const allTimeBest = Math.max(1, ...Object.keys(state.log).map(k => calcScore(k)));
+  const pct = score <= 0 ? 0 : Math.min(score / allTimeBest, 1);
+  const arc = document.getElementById('score-arc');
+  arc.style.strokeDashoffset = 163.36 - pct * 163.36;
+  arc.style.stroke = score < 0 ? '#f87171' : score === 0 ? '#6b6b80' : score >= allTimeBest ? '#fbbf24' : '#a78bfa';
+
+  // Celebrate when daily PB is reached (and it's today, not a past day edit)
+  const prevDisplayedScore = state._displayedScore || 0;
+  if (viewOffset === 0 && score >= allTimeBest && score > prevDisplayedScore && score > 0) {
+    triggerConfetti();
+    showToast('🏆 New daily PB!');
   }
-  const { r: sr, c: sc } = selected;
-  cell(sr, sc).classList.remove('selected');
-  selected = null;
-  if (sr === r && sc === c) return;
-  if (Math.abs(r - sr) + Math.abs(c - sc) === 1) trySwap(sr, sc, r, c);
+  state._displayedScore = viewOffset === 0 ? score : prevDisplayedScore;
+
+  updateStreaks();
+  renderHabitList('positive');
+  renderHabitList('negative');
+  renderLevel();
 }
 
-async function trySwap(r1, c1, r2, c2) {
-  if (r2 < 0 || r2 >= ROWS || c2 < 0 || c2 >= COLS) return;
-  if (busy) return;
-  busy = true;
+function renderHabitList(type) {
+  const listEl = document.getElementById(type === 'positive' ? 'positive-list' : 'negative-list');
+  let habits = state.habits.filter(h => h.type === type);
+  if (!habits.length) { listEl.innerHTML = `<div class="empty">Tap + to add an activity</div>`; return; }
 
-  const dir1 = r1 === r2 ? (c2 > c1 ? 'right' : 'left') : (r2 > r1 ? 'down' : 'up');
-  const dir2 = r1 === r2 ? (c2 > c1 ? 'left' : 'right') : (r2 > r1 ? 'up'   : 'down');
+  const log = todayLog();
 
-  // Test swap in data
-  swapCells(r1, c1, r2, c2);
-  const valid = getMatches().length > 0;
+  // Apply sort
+  const sort = sortState[type];
+  if (sort === 'az') habits = [...habits].sort((a, b) => a.name.localeCompare(b.name));
+  else if (sort === 'za') habits = [...habits].sort((a, b) => b.name.localeCompare(a.name));
+  else if (sort === 'asc') habits = [...habits].sort((a, b) => (log[a.id] || 0) - (log[b.id] || 0));
+  else if (sort === 'desc') habits = [...habits].sort((a, b) => (log[b.id] || 0) - (log[a.id] || 0));
 
-  if (!valid) {
-    // Undo and bounce
-    swapCells(r1, c1, r2, c2);
-    sfxInvalid();
-    cell(r1, c1).classList.add('bounce-' + dir1);
-    cell(r2, c2).classList.add('bounce-' + dir2);
-    await delay(320);
-    cell(r1, c1).classList.remove('bounce-' + dir1);
-    cell(r2, c2).classList.remove('bounce-' + dir2);
-    busy = false;
-    return;
+  listEl.innerHTML = habits.map(h => {
+    const count = log[h.id] || 0;
+    const pts = h.type === 'positive' ? h.pts : -h.pts;
+    const total = count * pts;
+    const totalStr = total > 0 ? `+${total}` : `${total}`;
+    const streak = state.habitStreaks?.[h.id] || 0;
+    const streakStr = streak > 0 ? ` · 🔥${streak}` : '';
+    const days = h.days && h.days.length < 7 ? ` · ${h.days.map(d => ['Su','M','Tu','W','Th','F','Sa'][d]).join('')}` : '';
+    const weights = h.trackWeight && log[h.id + '_weights']?.length
+      ? ` · ${log[h.id + '_weights'].join(', ')}kg` : '';
+    const metaStr = count === 0
+      ? `${days}${streakStr}`.replace(/^ · /, '') || '—'
+      : `×${count} = ${totalStr} pts${days}${streakStr}${weights}`;
+    const valClass = count === 0 ? 'zero' : (type === 'positive' ? 'pos' : 'neg');
+    const draggable = sort === 'manual';
+    return `<div class="habit-card ${type}" data-id="${h.id}"
+      oncontextmenu="openEditModal('${h.id}'); return false;"
+      ontouchstart="onCardTouchStart(event, '${h.id}')"
+      ontouchend="onCardTouchEnd(event)"
+      ontouchmove="onCardTouchMove(event)">
+      <div class="drag-handle" data-drag="${h.id}" style="${draggable ? '' : 'opacity:0.2;pointer-events:none;'}">⠿</div>
+      <div class="habit-icon">${h.icon}</div>
+      <div class="habit-info">
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-meta">${metaStr}</div>
+      </div>
+      <div class="habit-counter">
+        <button class="counter-btn minus" onclick="adjustHabit('${h.id}', -1)" ${count === 0 ? 'disabled' : ''}>−</button>
+        <div class="counter-val ${valClass}">${count === 0 ? '·' : count}</div>
+        <button class="counter-btn plus" onclick="adjustHabit('${h.id}', 1)">+</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  if (sort === 'manual') initDragForList(listEl);
+}
+
+function renderStats() {
+  const xp = calcTotalXP();
+  const lvl = calcLevel(xp);
+  const nextLvlXP = xpForLevel(lvl + 1);
+  const xpRemaining = lvl >= 50 ? 0 : nextLvlXP - xp;
+
+  // All-time best score
+  const allTimeBest = Math.max(0, ...Object.keys(state.log).map(k => calcScore(k)));
+
+  const todayXP = state.habits.reduce((acc, h) => {
+    const count = (state.log[makeKey(0)] || {})[h.id] || 0;
+    return acc + (h.type === 'positive' ? count * h.pts : -(count * h.pts));
+  }, 0);
+
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-value gold">${bestStreak()}</div><div class="stat-name">Best streak</div></div>
+    <div class="stat-card"><div class="stat-value green">${allTimeBest}</div><div class="stat-name">Best day (all time)</div></div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:var(--accent)">Level ${lvl}</div>
+      <div class="stat-name">${lvl >= 50 ? `${xp} XP — Max level` : `${xp} / ${nextLvlXP} XP`}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value red">${todayXP > 0 ? '+' : ''}${todayXP}</div>
+      <div class="stat-name">Today's XP</div>
+    </div>
+  `;
+
+  renderChart();
+  renderPersonalBests();
+  populateChartActivitySelect();
+}
+
+function getDayMetric(key) {
+  // Returns { value, weights } for a given date key, depending on chartActivityId
+  if (!chartActivityId) {
+    return { value: calcScore(key), weights: [] };
+  }
+  const log = state.log[key] || {};
+  const count = log[chartActivityId] || 0;
+  const weights = log[chartActivityId + '_weights'] || [];
+  return { value: count, weights };
+}
+
+function renderChart() {
+  const chartH = 148;
+  let bars = [];
+  const isActivityMode = !!chartActivityId;
+  const activity = isActivityMode ? state.habits.find(h => h.id === chartActivityId) : null;
+
+  if (chartPeriod === 'days') {
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const m = getDayMetric(key);
+      const label = i === 0 ? 'today' : d.toLocaleDateString('en-AU', { weekday: 'short' });
+      bars.push({ label, value: m.value, weights: m.weights, isNow: i === 0 });
+    }
+  } else if (chartPeriod === 'weeks') {
+    for (let i = 6; i >= 0; i--) {
+      let total = 0; let weights = [];
+      for (let d = 0; d < 7; d++) {
+        const day = new Date(); day.setDate(day.getDate() - (i * 7 + d));
+        const key = `${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`;
+        const m = getDayMetric(key);
+        total += m.value;
+        weights = weights.concat(m.weights);
+      }
+      const weekEnd = new Date(); weekEnd.setDate(weekEnd.getDate() - i * 7);
+      const label = i === 0 ? 'now' : weekEnd.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+      bars.push({ label, value: total, weights, isNow: i === 0 });
+    }
+  } else if (chartPeriod === 'months') {
+    for (let i = 6; i >= 0; i--) {
+      const ref = new Date();
+      ref.setDate(1);
+      ref.setMonth(ref.getMonth() - i);
+      const year = ref.getFullYear();
+      const month = ref.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      let total = 0; let weights = [];
+      for (let d = 1; d <= daysInMonth; d++) {
+        const key = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const m = getDayMetric(key);
+        total += m.value;
+        weights = weights.concat(m.weights);
+      }
+      const label = i === 0 ? 'now' : ref.toLocaleDateString('en-AU', { month: 'short' });
+      bars.push({ label, value: total, weights, isNow: i === 0 });
+    }
   }
 
-  // Animate slide then render swapped board, then cascade
-  sfxSwap();
-  cell(r1, c1).classList.add('swap-' + dir1);
-  cell(r2, c2).classList.add('swap-' + dir2);
-  await delay(190);
+  const maxVal = Math.max(...bars.map(b => Math.abs(b.value)), 1);
 
-  moves--;
-  movesUsed++;
-  lastSwapped = { r: r2, c: c2 };
-  render();           // board now shows swapped state
-  await cascade(1);   // finds & clears matches, drops, fills, repeats
-  lastSwapped = null;
+  document.getElementById('bar-chart').innerHTML = bars.map(b => {
+    let col;
+    if (isActivityMode) {
+      col = b.value === 0 ? '#2e2e38' : b.isNow ? '#a78bfa' : '#6b6b80';
+    } else {
+      col = b.value < 0 ? '#f87171' : b.value === 0 ? '#2e2e38' : b.isNow ? '#a78bfa' : '#6b6b80';
+    }
+    const h = Math.max(3, Math.round((Math.abs(b.value) / maxVal) * chartH));
+    return `<div class="bar-col">
+      <div class="bar-val"></div>
+      <div class="bar-wrap"><div class="bar" style="height:${h}px;background:${col}"></div></div>
+    </div>`;
+  }).join('');
 
-  if (!hasValidMove()) { shuffleBoard(); render(); }
+  document.getElementById('bar-labels').innerHTML = bars.map(b =>
+    `<div class="bar-label-cell ${b.isNow ? 'today' : ''}">${b.label}</div>`
+  ).join('');
 
-  saveGame();
+  document.getElementById('bar-scores').innerHTML = bars.map(b => {
+    if (isActivityMode) {
+      const col = b.value === 0 ? 'var(--border)' : b.isNow ? '#a78bfa' : '#6b6b80';
+      const countTxt = b.value === 0 ? '' : `×${b.value}`;
+      return `<div class="bar-score-cell" style="color:${col}">${countTxt}</div>`;
+    }
+    const col = b.value < 0 ? '#f87171' : b.value === 0 ? 'var(--border)' : b.isNow ? '#a78bfa' : '#6b6b80';
+    const txt = b.value === 0 ? '' : (b.value > 0 ? '+' : '') + b.value;
+    return `<div class="bar-score-cell" style="color:${col}">${txt}</div>`;
+  }).join('');
 
-  if (allTargetsMet())  showLevelComplete();
-  else if (moves <= 0)  showGameOver();
-
-  busy = false;
+  if (isActivityMode && activity?.trackWeight) {
+    document.getElementById('bar-weights').style.display = '';
+    document.getElementById('bar-weights').innerHTML = bars.map(b => {
+      const col = b.isNow ? '#a78bfa' : 'var(--muted)';
+      const txt = b.weights.length ? b.weights.join('kg, ') + 'kg' : '';
+      return `<div class="bar-weight-cell" style="color:${col}">${txt}</div>`;
+    }).join('');
+  } else {
+    document.getElementById('bar-weights').style.display = 'none';
+    document.getElementById('bar-weights').innerHTML = '';
+  }
 }
 
-// ── Hint ───────────────────────────────────────────────────────────────────
+function calcPersonalBests() {
+  // Returns { overall: { score, date }, habits: { [id]: { count, date } } }
+  const bests = { overall: { score: 0, date: null }, habits: {} };
+  for (const h of state.habits) bests.habits[h.id] = { count: 0, date: null };
 
-function showHint() {
-  if (hints <= 0 || busy) return;
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      const pairs = [[r, c, r, c+1], [r, c, r+1, c]];
-      for (const [r1, c1, r2, c2] of pairs) {
-        if (r2 >= ROWS || c2 >= COLS) continue;
-        swapCells(r1, c1, r2, c2);
-        const ok = getMatches().length > 0;
-        swapCells(r1, c1, r2, c2);
-        if (ok) {
-          hints--;
-          [cell(r1,c1), cell(r2,c2)].forEach(el => {
-            el.classList.add('hint');
-            setTimeout(() => el.classList.remove('hint'), 2500);
-          });
-          return;
-        }
+  for (const [dateKey, log] of Object.entries(state.log)) {
+    const score = calcScore(dateKey);
+    if (score > bests.overall.score) { bests.overall.score = score; bests.overall.date = dateKey; }
+    for (const h of state.habits) {
+      const count = log[h.id] || 0;
+      if (count > (bests.habits[h.id]?.count || 0)) {
+        bests.habits[h.id] = { count, date: dateKey };
       }
     }
   }
+  return bests;
 }
 
-// ── Overlays ───────────────────────────────────────────────────────────────
-
-function checkBestLevel() {
-  if (level > bestLevel) { bestLevel = level; saveBestLevel(); return true; }
-  return false;
+function formatDateKey(key) {
+  if (!key) return '—';
+  const d = new Date(key + 'T00:00:00');
+  return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-function showLevelComplete() {
-  sfxLevelComplete();
-  const isNew = checkBestLevel();
-  document.getElementById('ol-title').textContent = 'Level Complete!';
-  document.getElementById('ol-moves').textContent = movesUsed + ' move' + (movesUsed === 1 ? '' : 's') + ' used';
-  document.getElementById('ol-hiscore-wrap').style.display = isNew ? 'block' : 'none';
-  document.getElementById('ol-btn').textContent   = 'Next Level ›';
-  document.getElementById('ol-btn').onclick       = nextLevel;
-  overlay.classList.add('show');
-  updateUI();
+function calcBestWeight(id) {
+  // Returns { weight, date } for the highest single weight entry across all logs
+  let best = { weight: 0, date: null };
+  for (const [dateKey, log] of Object.entries(state.log)) {
+    const weights = log[id + '_weights'] || [];
+    for (const w of weights) {
+      if (w > best.weight) best = { weight: w, date: dateKey };
+    }
+  }
+  return best;
 }
 
-function retryLevel() {
-  overlay.classList.remove('show');
-  // Add 5 to the base allocation for this level
-  baseMoves = baseMoves + 5;
-  moves     = baseMoves;
-  movesUsed = 0;
-  hints     = 3;
-  initTargets();
-  if (!hasValidMove()) { shuffleBoard(); }
+function renderPersonalBests() {
+  const bests = calcPersonalBests();
+  const el = document.getElementById('pb-list');
+  if (!el) return;
+
+  let html = '';
+
+  const positives = state.habits.filter(h => h.type === 'positive');
+  const negatives = state.habits.filter(h => h.type === 'negative');
+
+  if (positives.length) {
+    for (const h of positives) {
+      const pb = bests.habits[h.id];
+      const streak = state.habitStreaks?.[h.id] || 0;
+      const wPB = h.trackWeight ? calcBestWeight(h.id) : null;
+      const weightLine = wPB?.weight > 0
+        ? `<div class="pb-weight">🏋️ Best weight · ${wPB.weight}kg · ${formatDateKey(wPB.date)}</div>`
+        : (h.trackWeight ? `<div class="pb-weight">🏋️ No weights logged yet</div>` : '');
+      html += `<div class="pb-card">
+        <div class="pb-icon">${h.icon}</div>
+        <div class="pb-info">
+          <div class="pb-name">${h.name}</div>
+          <div class="pb-date">${pb?.count > 0 ? formatDateKey(pb.date) : 'No logs yet'}${streak > 0 ? ` · 🔥${streak} day streak` : ''}</div>
+          ${weightLine}
+        </div>
+        <div class="pb-value count">×${pb?.count || 0}</div>
+      </div>`;
+    }
+  }
+
+  if (negatives.length) {
+    for (const h of negatives) {
+      const streak = state.habitStreaks?.[h.id] || 0;
+      html += `<div class="pb-card">
+        <div class="pb-icon">${h.icon}</div>
+        <div class="pb-info">
+          <div class="pb-name">${h.name}</div>
+          <div class="pb-date">${streak > 0 ? `${streak} day${streak !== 1 ? 's' : ''} clean` : 'Logged today'}</div>
+        </div>
+        <div class="pb-value count">🔥${streak}</div>
+      </div>`;
+    }
+  }
+
+  el.innerHTML = html || '<div class="empty">Log some activities to see personal bests</div>';
+}
+
+
+function adjustHabit(id, delta) {
+  const key = viewKey();
+  if (!state.log[key]) state.log[key] = {};
+  const h = state.habits.find(x => x.id === id);
+  if (!h) return;
+  const prev = state.log[key][id] || 0;
+  const next = Math.max(0, prev + delta);
+  if (next === prev) return;
+
+  // Weight prompt for positive delta on weight-tracked habits
+  if (h.trackWeight && delta > 0) {
+    promptWeight(h, key, delta);
+    return;
+  }
+
+  commitAdjust(id, key, delta, h, null);
+}
+
+function promptWeight(h, key, delta) {
+  // Show weight input modal
+  const lastWeight = getLastWeight(h.id);
+  const input = prompt(`${h.icon} ${h.name}\nEnter weight used (kg):`, lastWeight || '');
+  if (input === null) return; // cancelled
+  const weight = parseFloat(input);
+  const weightVal = isNaN(weight) ? null : weight;
+  commitAdjust(h.id, key, delta, h, weightVal);
+}
+
+function getLastWeight(id) {
+  // Find the most recent weight entry for this habit
+  const keys = Object.keys(state.log).sort().reverse();
+  for (const k of keys) {
+    const entry = state.log[k];
+    if (entry[id + '_weights'] && entry[id + '_weights'].length) {
+      return entry[id + '_weights'].slice(-1)[0];
+    }
+  }
+  return '';
+}
+
+function commitAdjust(id, key, delta, h, weight) {
+  if (!state.log[key]) state.log[key] = {};
+  const prev = state.log[key][id] || 0;
+  const next = Math.max(0, prev + delta);
+  if (next === prev) return;
+  state.log[key][id] = next;
+
+  // Store weight if provided
+  if (weight !== null && delta > 0) {
+    if (!state.log[key][id + '_weights']) state.log[key][id + '_weights'] = [];
+    state.log[key][id + '_weights'].push(weight);
+  }
+
+  // When count is decremented back to 0, clear any weight records for that day
+  if (next === 0 && state.log[key][id + '_weights']) {
+    delete state.log[key][id + '_weights'];
+  } else if (delta < 0 && state.log[key][id + '_weights']?.length) {
+    // Decrementing but not yet at 0 — drop the most recent weight entry to stay in sync
+    state.log[key][id + '_weights'].pop();
+    if (state.log[key][id + '_weights'].length === 0) delete state.log[key][id + '_weights'];
+  }
+
+  const pts = h.type === 'positive' ? h.pts : -h.pts;
+  const change = delta * pts;
+  const weightStr = weight !== null ? ` · ${weight}kg` : '';
+  showToast(delta > 0 ? `${h.icon} ${change > 0 ? '+' : ''}${change} pts${weightStr}` : `${h.icon} removed one`);
+  updateStreaks();
+  save();
   render();
-  saveGame();
 }
 
-function showGameOver() {
-  sfxGameOver();
-  document.getElementById('ol-title').textContent = 'No More Moves';
-  document.getElementById('ol-moves').textContent = movesUsed + ' move' + (movesUsed === 1 ? '' : 's') + ' used';
-  document.getElementById('ol-hiscore-wrap').style.display = 'none';
-  document.getElementById('ol-btn').textContent   = 'Try Again';
-  document.getElementById('ol-btn').onclick       = retryLevel;
-  overlay.classList.add('show');
-  updateUI();
+// ─── Long press + drag ────────────────────────────────────────────────────────
+let lpTimer = null;
+let dragging = null; // { id, el, ghost, listEl, startY, lastIndex }
+
+function onCardTouchStart(e, id) {
+  const handle = e.target.closest('[data-drag]');
+  if (handle) {
+    // Start drag from handle
+    e.preventDefault();
+    startDrag(e.touches[0], id, e.target.closest('.habit-card'));
+    return;
+  }
+  // Long press for edit
+  lpTimer = setTimeout(() => { lpTimer = null; openEditModal(id); }, 600);
 }
 
-function nextLevel() {
-  overlay.classList.remove('show');
-  level++;
-  moves = baseMoves; // same allocation as previous level
-  movesUsed = 0;
-  hints  = 3;
-  initTargets();
-  // Keep the existing board — only shuffle if no valid moves remain
-  if (!hasValidMove()) { shuffleBoard(); }
+function onCardTouchEnd(e) {
+  cancelLongPress();
+  if (dragging) endDrag();
+}
+
+function onCardTouchMove(e) {
+  if (dragging) {
+    e.preventDefault();
+    moveDrag(e.touches[0]);
+    return;
+  }
+  cancelLongPress();
+}
+
+function cancelLongPress() { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } }
+
+// ─── Drag implementation ──────────────────────────────────────────────────────
+function startDrag(touch, id, cardEl) {
+  cancelLongPress();
+  const listEl = cardEl.parentElement;
+  const rect = cardEl.getBoundingClientRect();
+
+  // Ghost clone
+  const ghost = cardEl.cloneNode(true);
+  ghost.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;
+    opacity:0.9;z-index:500;pointer-events:none;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.5);
+    transition:none;`;
+  document.body.appendChild(ghost);
+
+  cardEl.classList.add('dragging');
+
+  dragging = {
+    id, el: cardEl, ghost, listEl,
+    offsetY: touch.clientY - rect.top,
+    lastIndex: [...listEl.children].indexOf(cardEl)
+  };
+}
+
+function moveDrag(touch) {
+  if (!dragging) return;
+  const { ghost, listEl, offsetY, el } = dragging;
+  const y = touch.clientY - offsetY;
+  ghost.style.top = y + 'px';
+
+  // Find which card we're over
+  const cards = [...listEl.querySelectorAll('.habit-card:not(.dragging)')];
+  let targetIndex = cards.length;
+  for (let i = 0; i < cards.length; i++) {
+    const r = cards[i].getBoundingClientRect();
+    if (touch.clientY < r.top + r.height / 2) { targetIndex = i; break; }
+  }
+
+  // Remove drag-over highlights
+  cards.forEach(c => c.classList.remove('drag-over'));
+  if (targetIndex < cards.length) cards[targetIndex].classList.add('drag-over');
+
+  dragging.targetIndex = targetIndex;
+  dragging.cards = cards;
+}
+
+function endDrag() {
+  if (!dragging) return;
+  const { id, el, ghost, listEl, targetIndex, cards } = dragging;
+  dragging = null;
+
+  ghost.remove();
+  el.classList.remove('dragging');
+  if (cards) cards.forEach(c => c.classList.remove('drag-over'));
+
+  if (targetIndex === undefined) return;
+
+  // Reorder state.habits within the same type group
+  const type = el.classList.contains('positive') ? 'positive' : 'negative';
+  const typeHabits = state.habits.filter(h => h.type === type);
+  const others = state.habits.filter(h => h.type !== type);
+  const fromIdx = typeHabits.findIndex(h => h.id === id);
+  if (fromIdx === -1) return;
+
+  const [moved] = typeHabits.splice(fromIdx, 1);
+  typeHabits.splice(targetIndex, 0, moved);
+
+  // Rebuild state.habits preserving relative order of other type
+  // Keep original interleaving position of other types
+  const newHabits = [];
+  let pi = 0, ni = 0;
+  const pos = type === 'positive' ? typeHabits : state.habits.filter(h => h.type === 'positive');
+  const neg = type === 'negative' ? typeHabits : state.habits.filter(h => h.type === 'negative');
+  // Simple: positives first then negatives, preserving each group's order
+  state.habits = [...pos, ...neg];
+
+  save();
+  renderHabitList('positive');
+  renderHabitList('negative');
+}
+
+// ─── Desktop drag (mouse) for testing ────────────────────────────────────────
+function initDragForList(listEl) {
+  listEl.querySelectorAll('[data-drag]').forEach(handle => {
+    handle.addEventListener('mousedown', e => {
+      e.preventDefault();
+      const cardEl = handle.closest('.habit-card');
+      const id = handle.dataset.drag;
+      startDrag(e, id, cardEl);
+
+      const onMove = e => moveDrag(e);
+      const onUp = () => { endDrag(); document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  });
+}
+
+// ─── Tab ──────────────────────────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'stats') renderStats();
+  if (name === 'settings') { updateInstallUI(); }
+}
+
+// ─── Habit modal ──────────────────────────────────────────────────────────────
+let editingHabitId = null, selectedType = 'positive', selectedEmoji = '🏃';
+let selectedDays = [0,1,2,3,4,5,6];
+let trackWeight = false; // all days by default
+
+function toggleWeightTracking() {
+  trackWeight = !trackWeight;
+  document.getElementById('weight-toggle-btn').classList.toggle('on', trackWeight);
+  document.getElementById('weight-hint').style.display = trackWeight ? '' : 'none';
+}
+
+function initWeightToggle(val) {
+  trackWeight = !!val;
+  document.getElementById('weight-toggle-btn').classList.toggle('on', trackWeight);
+  document.getElementById('weight-hint').style.display = trackWeight ? '' : 'none';
+}
+
+function initDayPicker(days) {
+  selectedDays = days ? [...days] : [0,1,2,3,4,5,6];
+  document.querySelectorAll('.day-btn').forEach(btn => {
+    const d = parseInt(btn.dataset.day);
+    btn.classList.toggle('active', selectedDays.includes(d));
+    btn.onclick = () => toggleDay(d);
+  });
+  updateDaysHint();
+}
+
+function toggleDay(d) {
+  if (selectedDays.includes(d)) {
+    if (selectedDays.length === 1) return; // must have at least one
+    selectedDays = selectedDays.filter(x => x !== d);
+  } else {
+    selectedDays = [...selectedDays, d].sort();
+  }
+  document.querySelectorAll('.day-btn').forEach(btn => {
+    btn.classList.toggle('active', selectedDays.includes(parseInt(btn.dataset.day)));
+  });
+  updateDaysHint();
+}
+
+function updateDaysHint() {
+  const el = document.getElementById('days-hint');
+  if (!el) return;
+  if (selectedDays.length === 7) { el.textContent = 'Every day'; return; }
+  if (selectedDays.length === 0) { el.textContent = 'No days selected'; return; }
+  // Check weekdays/weekends shortcuts
+  const wd = [1,2,3,4,5], we = [0,6];
+  if (wd.every(d => selectedDays.includes(d)) && selectedDays.length === 5) { el.textContent = 'Weekdays only'; return; }
+  if (we.every(d => selectedDays.includes(d)) && selectedDays.length === 2) { el.textContent = 'Weekends only'; return; }
+  el.textContent = selectedDays.map(d => DAY_NAMES[d]).join(', ');
+}
+
+function openAddModal(type) {
+  editingHabitId = null;
+  document.getElementById('modal-title').textContent = 'New';
+  document.getElementById('habit-name-input').value = '';
+  document.getElementById('habit-pts-input').value = 5;
+  document.getElementById('habit-modal-actions').innerHTML = `
+    <button class="btn-secondary" onclick="closeModal('habit-modal')">Cancel</button>
+    <button class="btn-primary" onclick="saveHabit()">Save habit</button>`;
+  setType(type || 'positive');
+  selectedEmoji = EMOJIS[0];
+  renderEmojiGrid();
+  document.getElementById('emoji-custom-input').value = '';
+  initDayPicker([0,1,2,3,4,5,6]);
+  document.getElementById('days-field').style.display = (type === 'negative') ? 'none' : '';
+  initWeightToggle(false);
+  document.getElementById('weight-section').style.display = (type === 'negative') ? 'none' : '';
+  openModal('habit-modal');
+}
+
+function openEditModal(id) {
+  const h = state.habits.find(x => x.id === id);
+  if (!h) return;
+  editingHabitId = id;
+  document.getElementById('modal-title').textContent = 'Edit';
+  document.getElementById('habit-name-input').value = h.name;
+  document.getElementById('habit-pts-input').value = h.pts;
+  setType(h.type);
+  selectedEmoji = h.icon;
+  document.getElementById('habit-modal-actions').innerHTML = `
+    <button class="btn-danger" onclick="deleteHabit('${id}')">Delete</button>
+    <button class="btn-primary" onclick="saveHabit()">Save</button>`;
+  renderEmojiGrid();
+  initDayPicker(h.days || [0,1,2,3,4,5,6]);
+  document.getElementById('days-field').style.display = h.type === 'negative' ? 'none' : '';
+  initWeightToggle(h.trackWeight || false);
+  document.getElementById('weight-section').style.display = h.type === 'negative' ? 'none' : '';
+  openModal('habit-modal');
+}
+
+function setType(t) {
+  selectedType = t;
+  document.getElementById('type-pos').classList.toggle('selected', t === 'positive');
+  document.getElementById('type-neg').classList.toggle('selected', t === 'negative');
+  const daysField = document.getElementById('days-field');
+  if (daysField) daysField.style.display = t === 'negative' ? 'none' : '';
+  const weightSection = document.getElementById('weight-section');
+  if (weightSection) weightSection.style.display = t === 'negative' ? 'none' : '';
+}
+
+function renderEmojiGrid() {
+  document.getElementById('emoji-grid').innerHTML = EMOJIS.map(e =>
+    `<div class="emoji-opt ${e === selectedEmoji ? 'selected' : ''}" onclick="selectEmoji('${e}')">${e}</div>`
+  ).join('');
+  // Sync custom input: clear it if selection is from the grid
+  const customInput = document.getElementById('emoji-custom-input');
+  if (customInput) customInput.value = EMOJIS.includes(selectedEmoji) ? '' : selectedEmoji;
+}
+
+function selectEmoji(e) {
+  selectedEmoji = e;
+  document.getElementById('emoji-custom-input').value = '';
+  renderEmojiGrid();
+}
+
+function onCustomEmoji(input) {
+  // Extract first emoji/character from input
+  const val = [...input.value.trim()][0] || '';
+  if (!val) return;
+  selectedEmoji = val;
+  // Deselect grid
+  document.querySelectorAll('.emoji-opt').forEach(el => el.classList.remove('selected'));
+}
+
+function saveHabit() {
+  const name = document.getElementById('habit-name-input').value.trim();
+  const pts = Math.min(20, Math.max(1, parseInt(document.getElementById('habit-pts-input').value) || 5));
+  if (!name) { showToast('Give it a name'); return; }
+
+  if (editingHabitId) {
+    const h = state.habits.find(x => x.id === editingHabitId);
+    if (h) { h.name = name; h.pts = pts; h.type = selectedType; h.icon = selectedEmoji; h.days = selectedType === 'positive' ? selectedDays : null; h.trackWeight = selectedType === 'positive' ? trackWeight : false; }
+  } else {
+    state.habits.push({ id: 'h' + Date.now(), name, pts, type: selectedType, icon: selectedEmoji, days: selectedType === 'positive' ? selectedDays : null, trackWeight: selectedType === 'positive' ? trackWeight : false });
+  }
+  save();
+  closeModal('habit-modal');
   render();
-  saveGame();
+  showToast(editingHabitId ? 'Activity updated' : '✅ Activity added');
 }
 
-function newGame() {
-  overlay.classList.remove('show');
-  level = 1; moves = 5; baseMoves = 5; movesUsed = 0; hints = 3; selected = null;
-  initTargets();
-  clearSave();
-  newBoard();
+function deleteHabit(id) {
+  if (!confirm('Delete this activity?')) return;
+  state.habits = state.habits.filter(h => h.id !== id);
+  save();
+  closeModal('habit-modal');
   render();
+  showToast('Activity deleted');
 }
 
-// ── Persistence ────────────────────────────────────────────────────────────
-
-function saveGame() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ board, special, level, moves, baseMoves, movesUsed, hints, fruitTargets, fruitCollected })); } catch(e) {}
+async function updateApp() {
+  if (!confirm('This will save your data, clear the app cache, and reload. Continue?')) return;
+  sessionStorage.setItem('streak_update_restore', JSON.stringify(state));
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r => r.unregister()));
+  }
+  if ('caches' in window) {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+  }
+  location.reload(true);
 }
 
-function loadGame() {
+function restoreAfterUpdate() {
+  const raw = sessionStorage.getItem('streak_update_restore');
+  if (!raw) return;
+  sessionStorage.removeItem('streak_update_restore');
   try {
-    const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
-    if (!s || !Array.isArray(s.board) || s.board.length !== ROWS) return false;
-    board = s.board; level = s.level ?? 1;
-    moves = s.moves ?? 5; baseMoves = s.baseMoves ?? s.moves ?? 5; movesUsed = s.movesUsed ?? 0; hints = s.hints ?? 3;
-    special = s.special ?? board.map(row => row.map(() => null));
-    fruitTargets   = s.fruitTargets   ?? levelFruitTargets(level);
-    fruitCollected = s.fruitCollected ?? Array(GEM_TYPES).fill(0);
-    return true;
-  } catch(e) { return false; }
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data.habits)) return;
+    state = { habits: data.habits || [], log: data.log || {}, habitStreaks: data.habitStreaks || {} };
+    save();
+    showToast('✅ Data restored after update');
+  } catch {}
 }
 
-function clearSave()    { try { localStorage.removeItem(SAVE_KEY); } catch(e) {} }
-function saveBestLevel() { try { localStorage.setItem(BEST_KEY, bestLevel); } catch(e) {} }
-function loadBestLevel() { try { bestLevel = parseInt(localStorage.getItem(BEST_KEY) || '1', 10) || 1; } catch(e) {} }
+let swReg = null;
 
-// ── Boot ───────────────────────────────────────────────────────────────────
-
-
-
-
-// ── Audio ──────────────────────────────────────────────────────────────────
-
-let audioCtx = null;
-
-function getAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  return audioCtx;
-}
-
-function playTone(opts) {
+async function registerSW() {
+  if (!('serviceWorker' in navigator)) return;
   try {
-    const ctx  = getAudio();
-    const { type='sine', freq=440, freq2=freq, duration=0.15, vol=0.3, attack=0.005, decay=0.05, release=0.08, delay=0 } = opts;
-    const osc  = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = type;
-    const t = ctx.currentTime + delay;
-    osc.frequency.setValueAtTime(freq, t);
-    if (freq2 !== freq) osc.frequency.exponentialRampToValueAtTime(freq2, t + duration);
-    gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(vol, t + attack);
-    gain.gain.exponentialRampToValueAtTime(vol * 0.6, t + attack + decay);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + duration + release);
-    osc.start(t);
-    osc.stop(t + duration + release + 0.05);
-  } catch(e) {}
+    swReg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+    const sw = swReg.installing || swReg.waiting || swReg.active;
+    if (sw && sw.state !== 'activated') {
+      await new Promise(res => sw.addEventListener('statechange', e => {
+        if (e.target.state === 'activated') res();
+      }));
+    }
+    swReg = await navigator.serviceWorker.getRegistration('./');
+    checkForUpdate();
+  } catch (e) { console.warn('SW failed:', e); }
 }
 
-function sfxSwap() {
-  playTone({ type:'sine',    freq:320, freq2:480, duration:0.12, vol:0.18, release:0.05 });
+function getActiveSW() { return swReg?.active || navigator.serviceWorker?.controller; }
+
+async function checkForUpdate() {
+  try {
+    const bust = Date.now();
+    const res = await fetch(`./index.html?_cb=${bust}`, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+    });
+    const html = await res.text();
+    const match = html.match(/const APP_VERSION = '(\d+)'/);
+    if (!match) return;
+    const remoteVersion = parseInt(match[1], 10);
+    const localVersion  = parseInt(APP_VERSION, 10);
+    if (remoteVersion > localVersion) {
+      if (confirm(`A new version of Streak is available (v${remoteVersion}). Update now?\n\nYour data will be saved automatically.`)) {
+        autoUpdate();
+      }
+    }
+  } catch {}
 }
 
-function sfxInvalid() {
-  playTone({ type:'sawtooth', freq:180, freq2:120, duration:0.12, vol:0.15, release:0.08 });
+async function autoUpdate() {
+  sessionStorage.setItem('streak_update_restore', JSON.stringify(state));
+  if ('caches' in window) {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+  }
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r => r.unregister()));
+  }
+  location.reload(true);
 }
 
-function sfxMatch(combo) {
-  // Ascending pitch per combo level
-  const base = 440 + (combo - 1) * 80;
-  [0, 0.06, 0.12].forEach((d, i) => {
-    playTone({ type:'sine', freq: base * [1, 1.26, 1.5][i], duration:0.14, vol:0.22, attack:0.005, decay:0.04, release:0.07, delay: d });
+// ─── Confetti ─────────────────────────────────────────────────────────────────
+function triggerConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.display = 'block';
+
+  const colours = ['#a78bfa','#fbbf24','#4ade80','#f87171','#60a5fa','#f472b6','#34d399'];
+  const pieces = Array.from({ length: 120 }, () => ({
+    x: Math.random() * canvas.width,
+    y: -10 - Math.random() * 40,
+    w: 6 + Math.random() * 8,
+    h: 3 + Math.random() * 4,
+    col: colours[Math.floor(Math.random() * colours.length)],
+    rot: Math.random() * Math.PI * 2,
+    vx: (Math.random() - 0.5) * 3,
+    vy: 2 + Math.random() * 4,
+    vr: (Math.random() - 0.5) * 0.2,
+    alpha: 1
+  }));
+
+  let frame;
+  let start = null;
+  const duration = 2800;
+
+  function draw(ts) {
+    if (!start) start = ts;
+    const elapsed = ts - start;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    let alive = false;
+    for (const p of pieces) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.08; // gravity
+      p.rot += p.vr;
+      if (elapsed > duration * 0.6) p.alpha = Math.max(0, p.alpha - 0.018);
+      if (p.y < canvas.height + 20) alive = true;
+
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.col;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    }
+
+    if (alive && elapsed < duration + 1000) {
+      frame = requestAnimationFrame(draw);
+    } else {
+      canvas.style.display = 'none';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  if (frame) cancelAnimationFrame(frame);
+  frame = requestAnimationFrame(draw);
+}
+
+// ─── Share stats ──────────────────────────────────────────────────────────────
+async function shareStats() {
+  showToast('Preparing image…');
+  if (!window.html2canvas) {
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+
+  const el = document.getElementById('stats-capture-area');
+  const shareBtn = document.querySelector('.share-btn');
+  shareBtn.style.visibility = 'hidden';
+
+  const canvas = await html2canvas(el, {
+    backgroundColor: '#0f0f12',
+    scale: 2,
+    useCORS: true,
+    logging: false
   });
+
+  shareBtn.style.visibility = 'visible';
+
+  const url = 'https://sambayford.github.io/streak';
+
+  canvas.toBlob(async blob => {
+    const file = new File([blob], 'streak-stats.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: 'My Streak Stats',
+          text: `Check out my stats on Streak — Life Tracker\nLevel up your life:\n${url}`
+        });
+        return;
+      } catch (e) { if (e.name === 'AbortError') return; }
+    }
+    // Fallback: download image
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'streak-stats.png';
+    a.click();
+    showToast('Image saved — share manually');
+  }, 'image/png');
 }
 
-function sfxGlowing() {
-  // Sparkling sweep
-  [0, 0.04, 0.08, 0.12].forEach((d, i) => {
-    playTone({ type:'sine', freq:600 + i*200, freq2:900 + i*150, duration:0.18, vol:0.18, release:0.1, delay:d });
-  });
+let deferredInstallPrompt = null;
+const isPWA = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  updateInstallUI();
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  updateInstallUI();
+});
+
+function updateInstallUI() {
+  const item = document.getElementById('install-item');
+  const label = document.getElementById('install-label');
+  const desc = document.getElementById('install-desc');
+  const btn = document.getElementById('install-btn');
+  const icon = document.getElementById('install-icon');
+
+  if (deferredInstallPrompt) {
+    item.style.display = 'flex';
+    if (isPWA()) {
+      icon.textContent = '🔁';
+      label.textContent = 'Reinstall app';
+      desc.textContent = 'Add a fresh shortcut to your home screen';
+      btn.textContent = 'Reinstall';
+    } else {
+      icon.textContent = '📲';
+      label.textContent = 'Install app';
+      desc.textContent = 'Add Streak to your home screen';
+      btn.textContent = 'Install';
+    }
+  } else {
+    item.style.display = 'none';
+  }
 }
 
-
-function sfxLevelComplete() {
-  // Ascending fanfare
-  [0, 0.12, 0.24, 0.38].forEach((d, i) => {
-    playTone({ type:'sine', freq:[523, 659, 784, 1047][i], duration:0.22, vol:0.28, attack:0.01, decay:0.08, release:0.15, delay:d });
-  });
+async function triggerInstall() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  if (outcome === 'accepted') deferredInstallPrompt = null;
+  updateInstallUI();
+}
+function resetToday() {
+  const label = viewOffset === 0 ? "today's" : "this day's";
+  if (!confirm(`Clear all of ${label} logged counts?`)) return;
+  delete state.log[viewKey()];
+  save(); render(); showToast('Day reset');
 }
 
-function sfxGameOver() {
-  // Descending wah-wah
-  [0, 0.15, 0.3].forEach((d, i) => {
-    playTone({ type:'sawtooth', freq:[330, 261, 196][i], duration:0.25, vol:0.2, attack:0.01, decay:0.1, release:0.12, delay:d });
-  });
+function clearAllData() {
+  if (!confirm('Delete ALL habits, logs, and streaks? This cannot be undone.')) return;
+  localStorage.removeItem('streak_v3');
+  state = { habits: [], log: {}, streak: 0, lastActive: null };
+  render();
+  showToast('All data cleared');
 }
 
-
-function sfxSpecialActivate() {
-  // Big whoosh
-  playTone({ type:'sine', freq:150, freq2:600, duration:0.3, vol:0.3, attack:0.01, release:0.2 });
-  playTone({ type:'sine', freq:600, freq2:1200, duration:0.25, vol:0.2, attack:0.05, release:0.15, delay:0.05 });
+function exportData() {
+  const payload = { version: 3, exported: new Date().toISOString(), ...state };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href = url; a.download = `streak-backup-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📤 Data exported');
 }
 
-loadBestLevel();
-if (loadGame()) render();
-else { initTargets(); newBoard(); render(); }
-document.getElementById('monkey').classList.add('idle');
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data.habits)) throw new Error('Invalid file');
+      if (!confirm(`Import ${data.habits.length} habits? This will replace your current data.`)) return;
+      state = {
+        habits: data.habits || [],
+        log: data.log || {},
+        streak: data.streak || 0,
+        lastActive: data.lastActive || null
+      };
+      save();
+      render();
+      showToast(`📥 Imported ${data.habits.length} activities`);
+    } catch {
+      showToast('⚠️ Invalid backup file');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
 }
+
+// ─── Modal helpers ────────────────────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  setTimeout(() => document.querySelector(`#${id} input`)?.focus(), 100);
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ─── Seed ────────────────────────────────────────────────────────────────────
+function seedIfEmpty() {
+  if (state.habits.length) return;
+  // Migrate from old key if present
+  try {
+    const old = JSON.parse(localStorage.getItem('streak_v2') || '{}');
+    if (old.habits?.length) { state.habits = old.habits; state.log = old.log || {}; state.streak = old.streak || 0; state.lastActive = old.lastActive || null; save(); return; }
+  } catch {}
+  state.habits = [
+    { id: 'h1', name: 'Morning exercise', pts: 10, type: 'positive', icon: '🏃' },
+    { id: 'h2', name: 'Drink 8 glasses of water', pts: 5, type: 'positive', icon: '💧' },
+    { id: 'h3', name: 'Read for 20 minutes', pts: 5, type: 'positive', icon: '📚' },
+    { id: 'h4', name: 'Skipped junk food', pts: 8, type: 'positive', icon: '🥗' },
+    { id: 'h5', name: 'Too much screen time', pts: 5, type: 'negative', icon: '📱' },
+  ];
+  save();
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+seedIfEmpty();
+restoreAfterUpdate();
+updateStreaks();
+render();
+registerSW();
 </script>
 </body>
 </html>
