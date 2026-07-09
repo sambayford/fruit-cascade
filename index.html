@@ -881,7 +881,7 @@ function renderFruitTargets() {
     const el = document.getElementById('fruit-slot-' + g);
     if (!el) continue;
     const tgt       = fruitTargets[g] || 0;
-    const collected = Math.min(fruitCollected[g] || 0, tgt);
+    const collected = fruitCollected[g] || 0;
     const done      = collected >= tgt;
     el.className = 'stat-fruit' + (done ? ' done' : '');
     el.innerHTML = '<span class="sf-emoji">' + GEM_EMOJI[g] + '</span>' +
