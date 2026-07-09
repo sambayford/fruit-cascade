@@ -293,6 +293,14 @@
       50%      { transform: scale(1.15); filter: brightness(1.5) saturate(1.5); }
     }
 
+    /* Auto-hint shake (free idle nudge, distinct from manual hint pulse) */
+    .cell.auto-hint .gem { animation: auto-hint-shake 0.35s ease-in-out 4; }
+    @keyframes auto-hint-shake {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      25%      { transform: translate(-4px, 0) rotate(-6deg); }
+      75%      { transform: translate(4px, 0) rotate(6deg); }
+    }
+
     /* Score popup */
     .score-pop {
       position: absolute;
@@ -656,7 +664,7 @@ let special = []; // parallel board: null | 'glowing'
 let level = 1, moves = 5, baseMoves = 5, movesUsed = 0, bestLevel = 1, hints = 3;
 let lastSwapped = null;
 let fruitTargets = [], fruitCollected = [];
-let selected = null, busy = false, touchStart = null;
+let selected = null, busy = false, touchStart = null, idleTimer = null;
 
 const boardEl     = document.getElementById('board');
 const movesUsedEl = document.getElementById('moves-used-val');
@@ -1302,6 +1310,7 @@ async function trySwap(r1, c1, r2, c2) {
   if (!hasValidMove()) { shuffleBoard(); render(); }
 
   saveGame();
+  resetIdleTimer();
 
   if (allTargetsMet())  showLevelComplete();
   else if (moves <= 0)  showGameOver();
@@ -1327,12 +1336,53 @@ function showHint() {
             el.classList.add('hint');
             setTimeout(() => el.classList.remove('hint'), 2500);
           });
+          resetIdleTimer();
           return;
         }
       }
     }
   }
 }
+
+// ── Auto-hint (free idle nudge) ─────────────────────────────────────────────
+// If the player hasn't made a match in 10s, shake the lowest valid swap on
+// the board. Free — does not touch the `hints` counter.
+
+function findLowestMatch() {
+  for (let r = ROWS - 1; r >= 0; r--) {
+    for (let c = 0; c < COLS; c++) {
+      const pairs = [[r, c, r, c+1], [r, c, r+1, c]];
+      for (const [r1, c1, r2, c2] of pairs) {
+        if (r2 >= ROWS || c2 >= COLS) continue;
+        swapCells(r1, c1, r2, c2);
+        const ok = getMatches().length > 0;
+        swapCells(r1, c1, r2, c2);
+        if (ok) return [r1, c1, r2, c2];
+      }
+    }
+  }
+  return null;
+}
+
+function autoHint() {
+  if (busy || overlay.classList.contains('show') || document.hidden) { resetIdleTimer(); return; }
+  const found = findLowestMatch();
+  if (found) {
+    const [r1, c1, r2, c2] = found;
+    [cell(r1, c1), cell(r2, c2)].forEach(el => {
+      el.classList.add('auto-hint');
+      setTimeout(() => el.classList.remove('auto-hint'), 1600);
+    });
+  }
+  resetIdleTimer();
+}
+
+function resetIdleTimer() {
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(autoHint, 10000);
+}
+
+document.addEventListener('visibilitychange', () => { if (!document.hidden) resetIdleTimer(); });
 
 // ── Overlays ───────────────────────────────────────────────────────────────
 
@@ -1364,6 +1414,7 @@ function retryLevel() {
   if (!hasValidMove()) { shuffleBoard(); }
   render();
   saveGame();
+  resetIdleTimer();
 }
 
 function showGameOver() {
@@ -1388,6 +1439,7 @@ function nextLevel() {
   if (!hasValidMove()) { shuffleBoard(); }
   render();
   saveGame();
+  resetIdleTimer();
 }
 
 function newGame() {
@@ -1397,6 +1449,7 @@ function newGame() {
   clearSave();
   newBoard();
   render();
+  resetIdleTimer();
 }
 
 // ── Persistence ────────────────────────────────────────────────────────────
@@ -1507,6 +1560,7 @@ loadBestLevel();
 if (loadGame()) render();
 else { initTargets(); newBoard(); render(); }
 document.getElementById('monkey').classList.add('idle');
+resetIdleTimer();
 
 // ── Cache-busting refresh: ensure the latest deployed version is always loaded ──
 // Progress is already in localStorage (unaffected by cache clearing) via saveGame().
