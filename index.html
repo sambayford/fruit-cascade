@@ -1508,6 +1508,28 @@ if (loadGame()) render();
 else { initTargets(); newBoard(); render(); }
 document.getElementById('monkey').classList.add('idle');
 
+// ── Cache-busting refresh: ensure the latest deployed version is always loaded ──
+// Progress is already in localStorage (unaffected by cache clearing) via saveGame().
+// Guard with sessionStorage so this only runs once per tab session, not on every
+// reload it itself triggers.
+(function refreshCache() {
+  try {
+    if (sessionStorage.getItem('fc_cache_refreshed')) return;
+    sessionStorage.setItem('fc_cache_refreshed', '1');
+  } catch(e) { return; }
+
+  saveGame();
+
+  const tasks = [];
+  if ('caches' in window) {
+    tasks.push(caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))));
+  }
+  if ('serviceWorker' in navigator) {
+    tasks.push(navigator.serviceWorker.getRegistrations().then(regs => Promise.all(regs.map(r => r.unregister()))));
+  }
+  Promise.all(tasks).catch(() => {}).finally(() => location.reload());
+})();
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
 }
