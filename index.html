@@ -1086,6 +1086,17 @@ const MONKEY_PHRASES = [
   'Tasty!', 'Ooh ah!', 'Nom!', 'Yes!', 'Combo!'
 ];
 let monkeyTimer = null;
+let hintSpeechTimer = null;
+
+function monkeySay(phrase) {
+  const speechEl = document.getElementById('monkey-speech');
+  speechEl.textContent = phrase;
+  speechEl.classList.remove('show');
+  void speechEl.offsetWidth; // force reflow
+  speechEl.classList.add('show');
+  if (hintSpeechTimer) clearTimeout(hintSpeechTimer);
+  hintSpeechTimer = setTimeout(() => speechEl.classList.remove('show'), 1200);
+}
 
 function monkeyEat(matches, combo, capturedTypes) {
   const monkeyEl  = document.getElementById('monkey');
@@ -1336,6 +1347,7 @@ function showHint() {
             el.classList.add('hint');
             setTimeout(() => el.classList.remove('hint'), 2500);
           });
+          monkeySay('More!');
           resetIdleTimer();
           return;
         }
@@ -1373,6 +1385,7 @@ function autoHint() {
       el.classList.add('auto-hint');
       setTimeout(() => el.classList.remove('auto-hint'), 1600);
     });
+    monkeySay('More!');
   }
   resetIdleTimer();
 }
