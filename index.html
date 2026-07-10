@@ -294,23 +294,6 @@
       75%      { transform: translate(4px, 0) rotate(6deg); }
     }
 
-    /* Score popup */
-    .score-pop {
-      position: absolute;
-      pointer-events: none;
-      font-family: 'Cinzel Decorative', cursive;
-      font-size: 1rem;
-      color: var(--gold-glow);
-      text-shadow: 0 0 8px rgba(255,220,100,0.8);
-      animation: score-float 1s ease forwards;
-      z-index: 100;
-      white-space: nowrap;
-    }
-    @keyframes score-float {
-      0%   { opacity: 1; transform: translateY(0) scale(1); }
-      100% { opacity: 0; transform: translateY(-60px) scale(1.3); }
-    }
-
     /* Bottom buttons */
     .actions {
       display: flex;
@@ -492,12 +475,6 @@
       letter-spacing: 0.15em;
       text-transform: uppercase;
       margin-bottom: 20px;
-    }
-    .overlay-score {
-      font-family: 'Cinzel Decorative', cursive;
-      font-size: 2.2rem;
-      color: var(--gold-glow);
-      margin-bottom: 24px;
     }
     .overlay-moves {
       font-size: 0.75rem;
@@ -758,7 +735,7 @@
     <ul class="tutorial-steps">
       <li><span class="t-icon">👆</span><span>Tap or swipe to swap two adjacent fruit and line up 3 or more of the same kind.</span></li>
       <li><span class="t-icon">🎯</span><span>Collect the required amount of each fruit shown at the bottom before your moves run out.</span></li>
-      <li><span class="t-icon">🐒</span><span>Matches feed the monkey — bigger matches and combos earn more points!</span></li>
+      <li><span class="t-icon">🐒</span><span>Matches feed the monkey — bigger matches and combos make it even happier!</span></li>
       <li><span class="t-icon">💡</span><span>Stuck for 10 seconds? The board will shake a hint for you.</span></li>
     </ul>
     <button class="overlay-btn" id="tutorial-btn">Let's Go!</button>
@@ -1165,11 +1142,6 @@ async function cascade(combo) {
     }
   });
 
-  // Score
-  let basePts = 0;
-  clearCells.forEach(([r,c]) => { basePts += special[r][c] ? 60 : 20; });
-  const multiplier = combo;
-  const pts = basePts * multiplier;
   updateUI();
 
   // Pulse the fruit slots that gained a fruit
@@ -1346,21 +1318,6 @@ function flyFruitToMonkey(clearCells, capturedTypes) {
   });
 
   return latestArrival + 80; // small buffer after last fruit lands
-}
-
-function showScorePop([r, c], pts, multiplier = 1) {
-  const el = cell(r, c);
-  if (!el) return;
-  const bRect = boardEl.getBoundingClientRect();
-  const cRect = el.getBoundingClientRect();
-  const pop = document.createElement('div');
-  pop.className = 'score-pop';
-  pop.textContent = '+' + pts + (multiplier >= 2 ? ' ×' + multiplier : '');
-  pop.style.left = (cRect.left - bRect.left + cRect.width / 2) + 'px';
-  pop.style.top  = (cRect.top  - bRect.top) + 'px';
-  boardEl.style.position = 'relative';
-  boardEl.appendChild(pop);
-  pop.addEventListener('animationend', () => pop.remove());
 }
 
 // ── Input ──────────────────────────────────────────────────────────────────
