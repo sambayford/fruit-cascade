@@ -385,6 +385,65 @@
       margin-bottom: 14px;
     }
     .tutorial-steps li .t-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+    /* Settings button + panel */
+    #settings-btn {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      font-size: 1.3rem;
+      background: none;
+      border: none;
+      color: var(--dim);
+      cursor: pointer;
+      padding: 6px;
+      line-height: 1;
+      z-index: 5;
+    }
+    #settings-btn:active { transform: scale(0.92); }
+
+    #settings-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    #settings-overlay.show { opacity: 1; pointer-events: all; }
+    .settings-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+    .settings-row:last-of-type { border-bottom: none; }
+    .toggle-btn {
+      min-width: 56px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(191,90,242,0.4);
+      background: linear-gradient(135deg, rgba(191,90,242,0.4), rgba(10,132,255,0.4));
+      color: var(--gold);
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .toggle-btn.off {
+      background: rgba(255,255,255,0.05);
+      border-color: var(--border);
+      color: var(--dim);
+    }
     .overlay-card {
       background: linear-gradient(160deg, rgba(30,20,60,0.95), rgba(20,12,40,0.95));
       border: 1px solid rgba(240,192,96,0.3);
@@ -628,6 +687,7 @@
   <header>
     <h1>Fruit Cascade</h1>
     <p>Match · Splash · Munch</p>
+    <button id="settings-btn" aria-label="Settings">⚙️</button>
   </header>
 
 
@@ -677,6 +737,21 @@
       <li><span class="t-icon">💡</span><span>Stuck for 10 seconds? The board will shake a hint for you.</span></li>
     </ul>
     <button class="overlay-btn" id="tutorial-btn">Let's Go!</button>
+  </div>
+</div>
+
+<div id="settings-overlay">
+  <div class="overlay-card">
+    <div class="overlay-title">Settings</div>
+    <div class="settings-row">
+      <span>Sound</span>
+      <button class="toggle-btn" id="toggle-audio">On</button>
+    </div>
+    <div class="settings-row">
+      <span>Vibration</span>
+      <button class="toggle-btn" id="toggle-haptics">On</button>
+    </div>
+    <button class="overlay-btn" id="settings-close-btn" style="margin-top:20px">Done</button>
   </div>
 </div>
 
@@ -1382,7 +1457,9 @@ function findLowestMatch() {
 
 function autoHint() {
   const tutorialEl = document.getElementById('tutorial-overlay');
-  if (busy || overlay.classList.contains('show') || tutorialEl.classList.contains('show') || document.hidden) {
+  const settingsEl = document.getElementById('settings-overlay');
+  if (busy || overlay.classList.contains('show') || tutorialEl.classList.contains('show') ||
+      settingsEl.classList.contains('show') || document.hidden) {
     resetIdleTimer();
     return;
   }
@@ -1404,6 +1481,60 @@ function resetIdleTimer() {
 }
 
 document.addEventListener('visibilitychange', () => { if (!document.hidden) resetIdleTimer(); });
+
+// ── Settings (audio / haptics toggles) ──────────────────────────────────────
+
+const SETTINGS_KEY = 'fruitCascade_settings';
+let settings = { audio: true, haptics: true };
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
+    if (s) settings = { audio: s.audio !== false, haptics: s.haptics !== false };
+  } catch(e) {}
+}
+
+function saveSettings() {
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch(e) {}
+}
+
+function vibrate(pattern) {
+  if (!settings.haptics) return;
+  try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e) {}
+}
+
+function updateSettingsUI() {
+  const audioBtn   = document.getElementById('toggle-audio');
+  const hapticsBtn = document.getElementById('toggle-haptics');
+  audioBtn.textContent   = settings.audio   ? 'On' : 'Off';
+  audioBtn.classList.toggle('off', !settings.audio);
+  hapticsBtn.textContent = settings.haptics ? 'On' : 'Off';
+  hapticsBtn.classList.toggle('off', !settings.haptics);
+}
+
+function openSettings() {
+  updateSettingsUI();
+  document.getElementById('settings-overlay').classList.add('show');
+}
+
+function closeSettings() {
+  document.getElementById('settings-overlay').classList.remove('show');
+  resetIdleTimer();
+}
+
+document.getElementById('settings-btn').addEventListener('click', openSettings);
+document.getElementById('settings-close-btn').addEventListener('click', closeSettings);
+document.getElementById('toggle-audio').addEventListener('click', () => {
+  settings.audio = !settings.audio;
+  saveSettings();
+  updateSettingsUI();
+});
+document.getElementById('toggle-haptics').addEventListener('click', () => {
+  settings.haptics = !settings.haptics;
+  saveSettings();
+  updateSettingsUI();
+  if (settings.haptics) vibrate(10); // quick confirmation buzz
+});
 
 // ── Overlays ───────────────────────────────────────────────────────────────
 
@@ -1524,6 +1655,7 @@ function getAudio() {
 }
 
 function playTone(opts) {
+  if (!settings.audio) return;
   try {
     const ctx  = getAudio();
     const { type='sine', freq=440, freq2=freq, duration=0.15, vol=0.3, attack=0.005, decay=0.05, release=0.08, delay=0 } = opts;
@@ -1546,10 +1678,12 @@ function playTone(opts) {
 
 function sfxSwap() {
   playTone({ type:'sine',    freq:320, freq2:480, duration:0.12, vol:0.18, release:0.05 });
+  vibrate(10);
 }
 
 function sfxInvalid() {
   playTone({ type:'sawtooth', freq:180, freq2:120, duration:0.12, vol:0.15, release:0.08 });
+  vibrate(25);
 }
 
 function sfxMatch(combo) {
@@ -1558,6 +1692,7 @@ function sfxMatch(combo) {
   [0, 0.06, 0.12].forEach((d, i) => {
     playTone({ type:'sine', freq: base * [1, 1.26, 1.5][i], duration:0.14, vol:0.22, attack:0.005, decay:0.04, release:0.07, delay: d });
   });
+  vibrate(10 + Math.min(combo, 5) * 5);
 }
 
 function sfxGlowing() {
@@ -1565,6 +1700,7 @@ function sfxGlowing() {
   [0, 0.04, 0.08, 0.12].forEach((d, i) => {
     playTone({ type:'sine', freq:600 + i*200, freq2:900 + i*150, duration:0.18, vol:0.18, release:0.1, delay:d });
   });
+  vibrate(15);
 }
 
 
@@ -1573,6 +1709,7 @@ function sfxLevelComplete() {
   [0, 0.12, 0.24, 0.38].forEach((d, i) => {
     playTone({ type:'sine', freq:[523, 659, 784, 1047][i], duration:0.22, vol:0.28, attack:0.01, decay:0.08, release:0.15, delay:d });
   });
+  vibrate([30, 50, 30, 50, 80]);
 }
 
 function sfxGameOver() {
@@ -1580,6 +1717,7 @@ function sfxGameOver() {
   [0, 0.15, 0.3].forEach((d, i) => {
     playTone({ type:'sawtooth', freq:[330, 261, 196][i], duration:0.25, vol:0.2, attack:0.01, decay:0.1, release:0.12, delay:d });
   });
+  vibrate([50, 30, 50]);
 }
 
 
@@ -1587,8 +1725,10 @@ function sfxSpecialActivate() {
   // Big whoosh
   playTone({ type:'sine', freq:150, freq2:600, duration:0.3, vol:0.3, attack:0.01, release:0.2 });
   playTone({ type:'sine', freq:600, freq2:1200, duration:0.25, vol:0.2, attack:0.05, release:0.15, delay:0.05 });
+  vibrate([20, 30, 40]);
 }
 
+loadSettings();
 loadBestLevel();
 if (loadGame()) render();
 else { initTargets(); newBoard(); render(); }
