@@ -355,6 +355,36 @@
       transition: opacity 0.4s;
     }
     #overlay.show { opacity: 1; pointer-events: all; }
+
+    #tutorial-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    #tutorial-overlay.show { opacity: 1; pointer-events: all; }
+    .tutorial-steps {
+      list-style: none;
+      text-align: left;
+      margin: 4px 0 24px;
+      padding: 0;
+    }
+    .tutorial-steps li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 0.8rem;
+      color: var(--text);
+      line-height: 1.4;
+      margin-bottom: 14px;
+    }
+    .tutorial-steps li .t-icon { font-size: 1.2rem; flex-shrink: 0; }
     .overlay-card {
       background: linear-gradient(160deg, rgba(30,20,60,0.95), rgba(20,12,40,0.95));
       border: 1px solid rgba(240,192,96,0.3);
@@ -634,6 +664,19 @@
     <div class="overlay-moves" id="ol-moves"></div>
     <div id="ol-hiscore-wrap" style="font-size:0.7rem;color:var(--gold);letter-spacing:0.12em;margin:4px 0 16px;display:none">🏆 New Best Level!</div>
     <button class="overlay-btn" id="ol-btn">Next Level</button>
+  </div>
+</div>
+
+<div id="tutorial-overlay">
+  <div class="overlay-card">
+    <div class="overlay-title">How to Play</div>
+    <ul class="tutorial-steps">
+      <li><span class="t-icon">👆</span><span>Tap or swipe to swap two adjacent fruit and line up 3 or more of the same kind.</span></li>
+      <li><span class="t-icon">🎯</span><span>Collect the required amount of each fruit shown at the bottom before your moves run out.</span></li>
+      <li><span class="t-icon">🐒</span><span>Matches feed the monkey — bigger matches and combos earn more points!</span></li>
+      <li><span class="t-icon">💡</span><span>Stuck for 10 seconds? The board will shake a hint for you.</span></li>
+    </ul>
+    <button class="overlay-btn" id="tutorial-btn">Let's Go!</button>
   </div>
 </div>
 
@@ -1338,7 +1381,11 @@ function findLowestMatch() {
 }
 
 function autoHint() {
-  if (busy || overlay.classList.contains('show') || document.hidden) { resetIdleTimer(); return; }
+  const tutorialEl = document.getElementById('tutorial-overlay');
+  if (busy || overlay.classList.contains('show') || tutorialEl.classList.contains('show') || document.hidden) {
+    resetIdleTimer();
+    return;
+  }
   const found = findLowestMatch();
   if (found) {
     const [r1, c1, r2, c2] = found;
@@ -1359,6 +1406,20 @@ function resetIdleTimer() {
 document.addEventListener('visibilitychange', () => { if (!document.hidden) resetIdleTimer(); });
 
 // ── Overlays ───────────────────────────────────────────────────────────────
+
+const TUTORIAL_KEY = 'fruitCascade_tutorialSeen';
+
+function showTutorial() {
+  document.getElementById('tutorial-overlay').classList.add('show');
+}
+
+function closeTutorial() {
+  document.getElementById('tutorial-overlay').classList.remove('show');
+  try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch(e) {}
+  resetIdleTimer();
+}
+
+document.getElementById('tutorial-btn').addEventListener('click', closeTutorial);
 
 function checkBestLevel() {
   if (level > bestLevel) { bestLevel = level; saveBestLevel(); return true; }
@@ -1533,6 +1594,10 @@ if (loadGame()) render();
 else { initTargets(); newBoard(); render(); }
 document.getElementById('monkey').classList.add('idle');
 resetIdleTimer();
+
+try {
+  if (!localStorage.getItem(TUTORIAL_KEY)) showTutorial();
+} catch(e) {}
 
 // ── Cache-busting refresh: ensure the latest deployed version is always loaded ──
 // Progress is already in localStorage (unaffected by cache clearing) via saveGame().
