@@ -444,6 +444,31 @@
       border-color: var(--border);
       color: var(--dim);
     }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      left: 50%;
+      bottom: 90px;
+      transform: translateX(-50%) translateY(10px);
+      background: rgba(20,18,28,0.96);
+      border: 1px solid rgba(191,90,242,0.4);
+      color: var(--text);
+      padding: 10px 18px;
+      border-radius: 14px;
+      font-size: 0.72rem;
+      max-width: 280px;
+      text-align: center;
+      z-index: 300;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s, transform 0.25s;
+      line-height: 1.4;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
     .overlay-card {
       background: linear-gradient(160deg, rgba(30,20,60,0.95), rgba(20,12,40,0.95));
       border: 1px solid rgba(240,192,96,0.3);
@@ -754,6 +779,8 @@
     <button class="overlay-btn" id="settings-close-btn" style="margin-top:20px">Done</button>
   </div>
 </div>
+
+<div id="toast"></div>
 
 <script>
 const COLS = 8, ROWS = 8;
@@ -1516,6 +1543,15 @@ function primeHaptics() {
   try { if (navigator.vibrate) navigator.vibrate(1); } catch(e) {}
 }
 
+let toastTimer = null;
+function showToast(msg, duration = 3200) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), duration);
+}
+
 function updateSettingsUI() {
   const audioBtn   = document.getElementById('toggle-audio');
   const hapticsBtn = document.getElementById('toggle-haptics');
@@ -1546,7 +1582,10 @@ document.getElementById('toggle-haptics').addEventListener('click', () => {
   settings.haptics = !settings.haptics;
   saveSettings();
   updateSettingsUI();
-  if (settings.haptics) vibrate(35); // clearly-noticeable confirmation buzz
+  if (settings.haptics) {
+    vibrate(35); // clearly-noticeable confirmation buzz
+    showToast('If you don\u2019t feel that, check that vibration is turned on in your phone\u2019s system settings.');
+  }
 });
 
 // ── Overlays ───────────────────────────────────────────────────────────────
