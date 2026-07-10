@@ -286,14 +286,7 @@
     @keyframes bounce-d { 0%{transform:translateY(0)} 40%{transform:translateY(calc((var(--cell) + var(--gap))*0.5))} 100%{transform:translateY(0)} }
     @keyframes bounce-u { 0%{transform:translateY(0)} 40%{transform:translateY(calc(-1*(var(--cell) + var(--gap))*0.5))} 100%{transform:translateY(0)} }
 
-    /* Hint pulse */
-    .cell.hint .gem { animation: hint-pulse 0.8s ease-in-out 3; }
-    @keyframes hint-pulse {
-      0%,100% { transform: scale(1); }
-      50%      { transform: scale(1.15); filter: brightness(1.5) saturate(1.5); }
-    }
-
-    /* Auto-hint shake (free idle nudge, distinct from manual hint pulse) */
+    /* Auto-hint shake (free idle nudge) */
     .cell.auto-hint .gem { animation: auto-hint-shake 0.35s ease-in-out 4; }
     @keyframes auto-hint-shake {
       0%, 100% { transform: translate(0, 0) rotate(0deg); }
@@ -345,13 +338,6 @@
       background: linear-gradient(135deg, rgba(191,90,242,0.3), rgba(10,132,255,0.3));
       border-color: rgba(191,90,242,0.4);
       color: var(--gold);
-    }
-    #hint-btn { position: relative; }
-    #hint-count {
-      position: absolute;
-      top: 4px; right: 6px;
-      font-size: 0.6rem;
-      color: var(--dim);
     }
 
     /* Level complete overlay */
@@ -661,7 +647,7 @@ const BEST_KEY = 'fruitCascade_best';
 
 let board = [];
 let special = []; // parallel board: null | 'glowing'
-let level = 1, moves = 5, baseMoves = 5, movesUsed = 0, bestLevel = 1, hints = 3;
+let level = 1, moves = 5, baseMoves = 5, movesUsed = 0, bestLevel = 1;
 let lastSwapped = null;
 let fruitTargets = [], fruitCollected = [];
 let selected = null, busy = false, touchStart = null, idleTimer = null;
@@ -1331,34 +1317,9 @@ async function trySwap(r1, c1, r2, c2) {
 
 // ── Hint ───────────────────────────────────────────────────────────────────
 
-function showHint() {
-  if (hints <= 0 || busy) return;
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      const pairs = [[r, c, r, c+1], [r, c, r+1, c]];
-      for (const [r1, c1, r2, c2] of pairs) {
-        if (r2 >= ROWS || c2 >= COLS) continue;
-        swapCells(r1, c1, r2, c2);
-        const ok = getMatches().length > 0;
-        swapCells(r1, c1, r2, c2);
-        if (ok) {
-          hints--;
-          [cell(r1,c1), cell(r2,c2)].forEach(el => {
-            el.classList.add('hint');
-            setTimeout(() => el.classList.remove('hint'), 2500);
-          });
-          monkeySay('More!');
-          resetIdleTimer();
-          return;
-        }
-      }
-    }
-  }
-}
-
 // ── Auto-hint (free idle nudge) ─────────────────────────────────────────────
 // If the player hasn't made a match in 10s, shake the lowest valid swap on
-// the board. Free — does not touch the `hints` counter.
+// the board.
 
 function findLowestMatch() {
   for (let r = ROWS - 1; r >= 0; r--) {
@@ -1422,7 +1383,6 @@ function retryLevel() {
   baseMoves = baseMoves + 5;
   moves     = baseMoves;
   movesUsed = 0;
-  hints     = 3;
   initTargets();
   if (!hasValidMove()) { shuffleBoard(); }
   render();
@@ -1446,7 +1406,6 @@ function nextLevel() {
   level++;
   moves = baseMoves; // same allocation as previous level
   movesUsed = 0;
-  hints  = 3;
   initTargets();
   // Keep the existing board — only shuffle if no valid moves remain
   if (!hasValidMove()) { shuffleBoard(); }
@@ -1457,7 +1416,7 @@ function nextLevel() {
 
 function newGame() {
   overlay.classList.remove('show');
-  level = 1; moves = 5; baseMoves = 5; movesUsed = 0; hints = 3; selected = null;
+  level = 1; moves = 5; baseMoves = 5; movesUsed = 0; selected = null;
   initTargets();
   clearSave();
   newBoard();
@@ -1468,7 +1427,7 @@ function newGame() {
 // ── Persistence ────────────────────────────────────────────────────────────
 
 function saveGame() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ board, special, level, moves, baseMoves, movesUsed, hints, fruitTargets, fruitCollected })); } catch(e) {}
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ board, special, level, moves, baseMoves, movesUsed, fruitTargets, fruitCollected })); } catch(e) {}
 }
 
 function loadGame() {
@@ -1476,7 +1435,7 @@ function loadGame() {
     const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
     if (!s || !Array.isArray(s.board) || s.board.length !== ROWS) return false;
     board = s.board; level = s.level ?? 1;
-    moves = s.moves ?? 5; baseMoves = s.baseMoves ?? s.moves ?? 5; movesUsed = s.movesUsed ?? 0; hints = s.hints ?? 3;
+    moves = s.moves ?? 5; baseMoves = s.baseMoves ?? s.moves ?? 5; movesUsed = s.movesUsed ?? 0;
     special = s.special ?? board.map(row => row.map(() => null));
     fruitTargets   = s.fruitTargets   ?? levelFruitTargets(level);
     fruitCollected = s.fruitCollected ?? Array(GEM_TYPES).fill(0);
