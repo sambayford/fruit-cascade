@@ -1341,6 +1341,7 @@ function showScorePop([r, c], pts, multiplier = 1) {
 function onPointerDown(e) {
   if (busy) return;
   e.preventDefault();
+  primeHaptics();
   const r = +e.currentTarget.dataset.r;
   const c = +e.currentTarget.dataset.c;
   touchStart = { r, c, x: e.clientX, y: e.clientY };
@@ -1503,6 +1504,18 @@ function vibrate(pattern) {
   try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e) {}
 }
 
+let hapticsPrimed = false;
+function primeHaptics() {
+  // Android Chrome requires a genuine user gesture before the FIRST vibrate()
+  // call in a session will actually fire. A swipe-to-swap can call vibrate()
+  // from a pointermove handler, which may not itself count as that gesture —
+  // so fire a trivial vibrate() here, directly inside pointerdown (a real
+  // touch-start gesture), to register activation as early as possible.
+  if (hapticsPrimed) return;
+  hapticsPrimed = true;
+  try { if (navigator.vibrate) navigator.vibrate(1); } catch(e) {}
+}
+
 function updateSettingsUI() {
   const audioBtn   = document.getElementById('toggle-audio');
   const hapticsBtn = document.getElementById('toggle-haptics');
@@ -1533,7 +1546,7 @@ document.getElementById('toggle-haptics').addEventListener('click', () => {
   settings.haptics = !settings.haptics;
   saveSettings();
   updateSettingsUI();
-  if (settings.haptics) vibrate(10); // quick confirmation buzz
+  if (settings.haptics) vibrate(35); // clearly-noticeable confirmation buzz
 });
 
 // ── Overlays ───────────────────────────────────────────────────────────────
@@ -1678,12 +1691,12 @@ function playTone(opts) {
 
 function sfxSwap() {
   playTone({ type:'sine',    freq:320, freq2:480, duration:0.12, vol:0.18, release:0.05 });
-  vibrate(10);
+  vibrate(20);
 }
 
 function sfxInvalid() {
   playTone({ type:'sawtooth', freq:180, freq2:120, duration:0.12, vol:0.15, release:0.08 });
-  vibrate(25);
+  vibrate(30);
 }
 
 function sfxMatch(combo) {
@@ -1692,7 +1705,7 @@ function sfxMatch(combo) {
   [0, 0.06, 0.12].forEach((d, i) => {
     playTone({ type:'sine', freq: base * [1, 1.26, 1.5][i], duration:0.14, vol:0.22, attack:0.005, decay:0.04, release:0.07, delay: d });
   });
-  vibrate(10 + Math.min(combo, 5) * 5);
+  vibrate(18 + Math.min(combo, 5) * 6);
 }
 
 function sfxGlowing() {
@@ -1700,7 +1713,7 @@ function sfxGlowing() {
   [0, 0.04, 0.08, 0.12].forEach((d, i) => {
     playTone({ type:'sine', freq:600 + i*200, freq2:900 + i*150, duration:0.18, vol:0.18, release:0.1, delay:d });
   });
-  vibrate(15);
+  vibrate(22);
 }
 
 
