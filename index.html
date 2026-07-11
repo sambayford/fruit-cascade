@@ -1438,12 +1438,20 @@ function findGlowingMatch() {
       const pairs = [[r, c, r, c+1], [r, c, r+1, c]];
       for (const [r1, c1, r2, c2] of pairs) {
         if (r2 >= ROWS || c2 >= COLS) continue;
-        const involvesGlowing = special[r1][c1] === 'glowing' || special[r2][c2] === 'glowing';
-        if (!involvesGlowing) continue;
+        const hadGlowing = special[r1][c1] === 'glowing' || special[r2][c2] === 'glowing';
+        if (!hadGlowing) continue;
         swapCells(r1, c1, r2, c2);
-        const ok = getMatchGroups().groups.some(g => fruitStillNeeded(g.gemType));
+        // The glowing gem itself moves with the swap — check where it ended up
+        // and confirm the resulting match actually includes (clears) it, not
+        // just that *some* unrelated match happened to also be possible.
+        const glowPositions = [];
+        if (special[r1][c1] === 'glowing') glowPositions.push(r1 * COLS + c1);
+        if (special[r2][c2] === 'glowing') glowPositions.push(r2 * COLS + c2);
+        const clearsGlowing = getMatchGroups().groups.some(g =>
+          fruitStillNeeded(g.gemType) && g.cells.some(([rr, cc]) => glowPositions.includes(rr * COLS + cc))
+        );
         swapCells(r1, c1, r2, c2);
-        if (ok) return [r1, c1, r2, c2];
+        if (clearsGlowing) return [r1, c1, r2, c2];
       }
     }
   }
