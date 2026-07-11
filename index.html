@@ -37,6 +37,21 @@
       --board-size: calc(var(--cell) * 8 + var(--gap) * 9);
     }
 
+    /* Light theme override — same variables, lighter/parchment palette */
+    body.light-theme {
+      --bg-deep:   #f4ecd8;
+      --bg-mid:    #ffffff;
+      --bg-panel:  rgba(0,0,0,0.035);
+      --border:    rgba(0,0,0,0.12);
+      --gold:      #a8720e;
+      --gold-glow: #c9910f;
+      --silver:    #5a6b7a;
+      --text:      #2c2438;
+      --dim:       #6b5f52;
+    }
+    body.light-theme::before { opacity: 0.35; }
+    body.light-theme::after  { opacity: 0.5; }
+
     * { box-sizing: border-box; margin: 0; padding: 0; touch-action: none; }
 
     body {
@@ -777,6 +792,10 @@
     <div class="settings-row">
       <span>Vibration</span>
       <button class="toggle-btn" id="toggle-haptics">On</button>
+    </div>
+    <div class="settings-row">
+      <span>Dark Mode</span>
+      <button class="toggle-btn" id="toggle-darkmode">On</button>
     </div>
     <button class="overlay-btn" id="settings-close-btn" style="margin-top:20px">Done</button>
   </div>
@@ -1676,17 +1695,21 @@ document.getElementById('scores-close-btn').addEventListener('click', closeScore
 // ── Settings (audio / haptics toggles) ──────────────────────────────────────
 
 const SETTINGS_KEY = 'fruitCascade_settings';
-let settings = { audio: true, haptics: true };
+let settings = { audio: true, haptics: true, darkMode: true };
 
 function loadSettings() {
   try {
     const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
-    if (s) settings = { audio: s.audio !== false, haptics: s.haptics !== false };
+    if (s) settings = { audio: s.audio !== false, haptics: s.haptics !== false, darkMode: s.darkMode !== false };
   } catch(e) {}
 }
 
 function saveSettings() {
   try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch(e) {}
+}
+
+function applyTheme() {
+  document.body.classList.toggle('light-theme', !settings.darkMode);
 }
 
 function vibrate(pattern) {
@@ -1716,12 +1739,15 @@ function showToast(msg, duration = 3200) {
 }
 
 function updateSettingsUI() {
-  const audioBtn   = document.getElementById('toggle-audio');
-  const hapticsBtn = document.getElementById('toggle-haptics');
+  const audioBtn    = document.getElementById('toggle-audio');
+  const hapticsBtn  = document.getElementById('toggle-haptics');
+  const darkModeBtn = document.getElementById('toggle-darkmode');
   audioBtn.textContent   = settings.audio   ? 'On' : 'Off';
   audioBtn.classList.toggle('off', !settings.audio);
   hapticsBtn.textContent = settings.haptics ? 'On' : 'Off';
   hapticsBtn.classList.toggle('off', !settings.haptics);
+  darkModeBtn.textContent = settings.darkMode ? 'On' : 'Off';
+  darkModeBtn.classList.toggle('off', !settings.darkMode);
 }
 
 function openSettings() {
@@ -1749,6 +1775,12 @@ document.getElementById('toggle-haptics').addEventListener('click', () => {
     vibrate(35); // clearly-noticeable confirmation buzz
     showToast('If you don\u2019t feel that, check that vibration is turned on in your phone\u2019s system settings.');
   }
+});
+document.getElementById('toggle-darkmode').addEventListener('click', () => {
+  settings.darkMode = !settings.darkMode;
+  saveSettings();
+  updateSettingsUI();
+  applyTheme();
 });
 
 // ── Overlays ───────────────────────────────────────────────────────────────
@@ -1946,6 +1978,7 @@ function sfxSpecialActivate() {
 }
 
 loadSettings();
+applyTheme();
 loadStats();
 loadBestLevel();
 if (loadGame()) render();
