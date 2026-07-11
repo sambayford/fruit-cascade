@@ -1421,14 +1421,33 @@ async function trySwap(r1, c1, r2, c2) {
 // ── Hint ───────────────────────────────────────────────────────────────────
 
 // ── Auto-hint (free idle nudge) ─────────────────────────────────────────────
-// If the player hasn't made a match in 10s, shake a valid swap on the board:
-// prefer a swap that creates a match of 4+ (a special candy opportunity),
-// falling back to the lowest 3-match if no such opportunity exists. Matches
-// of a fruit type that's already hit its target are skipped — no point
-// nudging the player toward fruit they don't need anymore.
+// If the player hasn't made a match in 10s, shake a valid swap on the board.
+// Priority: 1) a swap that matches an already-glowing special candy,
+// 2) a swap that creates a new 4+ match (a special candy opportunity),
+// 3) the lowest valid 3-match. Matches of a fruit type that's already hit
+// its target are skipped throughout — no point nudging the player toward
+// fruit they don't need anymore.
 
 function fruitStillNeeded(gemType) {
   return (fruitCollected[gemType] || 0) < (fruitTargets[gemType] || 0);
+}
+
+function findGlowingMatch() {
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const pairs = [[r, c, r, c+1], [r, c, r+1, c]];
+      for (const [r1, c1, r2, c2] of pairs) {
+        if (r2 >= ROWS || c2 >= COLS) continue;
+        const involvesGlowing = special[r1][c1] === 'glowing' || special[r2][c2] === 'glowing';
+        if (!involvesGlowing) continue;
+        swapCells(r1, c1, r2, c2);
+        const ok = getMatchGroups().groups.some(g => fruitStillNeeded(g.gemType));
+        swapCells(r1, c1, r2, c2);
+        if (ok) return [r1, c1, r2, c2];
+      }
+    }
+  }
+  return null;
 }
 
 function findBigMatch() {
@@ -1471,7 +1490,7 @@ function autoHint() {
     resetIdleTimer();
     return;
   }
-  const found = findBigMatch() || findLowestMatch();
+  const found = findGlowingMatch() || findBigMatch() || findLowestMatch();
   if (found) {
     const [r1, c1, r2, c2] = found;
     [cell(r1, c1), cell(r2, c2)].forEach(el => {
