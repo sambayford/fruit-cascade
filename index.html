@@ -1076,6 +1076,21 @@ function collectClear(initialCells) {
   return [...toNull].map(idx => [Math.floor(idx/COLS), idx%COLS]);
 }
 
+// Returns the cell in `cells` nearest the geometric centroid of the group —
+// used to place a new special candy in the "middle" of a match shape when it
+// wasn't the player's own swap that created it (e.g. a cascade/chain match).
+function closestToMiddle(cells) {
+  let sumR = 0, sumC = 0;
+  for (const [r, c] of cells) { sumR += r; sumC += c; }
+  const midR = sumR / cells.length, midC = sumC / cells.length;
+  let best = cells[0], bestDist = Infinity;
+  for (const [r, c] of cells) {
+    const d = (r - midR) ** 2 + (c - midC) ** 2;
+    if (d < bestDist) { bestDist = d; best = [r, c]; }
+  }
+  return best;
+}
+
 async function cascade(combo) {
   const { groups, allCells } = getMatchGroups();
   if (!allCells.length) return;
@@ -1104,8 +1119,11 @@ async function cascade(combo) {
         const totalCells = new Set([...a.cells, ...b.cells].map(([r,c]) => r*COLS+c));
         if (totalCells.size >= 5) {
           const allLCells = [...a.cells, ...b.cells];
-          let pr = shared[0], pc = shared[1];
-          if (lastSwapped && allLCells.some(([r,c]) => r === lastSwapped.r && c === lastSwapped.c)) {
+          // Default: the cell closest to the middle of the whole L/T shape.
+          let [pr, pc] = closestToMiddle(allLCells);
+          // If the player's own swap directly created this match, the glowing
+          // candy always lands on the cell they moved instead.
+          if (combo === 1 && lastSwapped && allLCells.some(([r,c]) => r === lastSwapped.r && c === lastSwapped.c)) {
             pr = lastSwapped.r; pc = lastSwapped.c;
           }
           newSpecials.push({ r: pr, c: pc, kind: 'glowing', gemType: a.gemType });
@@ -1122,8 +1140,11 @@ async function cascade(combo) {
     const { len, pivot, gemType, cells } = groups[i];
     const hasSpecialInGroup = cells.some(([r,c]) => special[r][c]);
     if (!hasSpecialInGroup && len >= 4) {
+      // Default: pivot is already the middle cell of the straight run.
       let pr = pivot[0], pc = pivot[1];
-      if (lastSwapped && cells.some(([r,c]) => r === lastSwapped.r && c === lastSwapped.c)) {
+      // If the player's own swap directly created this match, the glowing
+      // candy always lands on the cell they moved instead.
+      if (combo === 1 && lastSwapped && cells.some(([r,c]) => r === lastSwapped.r && c === lastSwapped.c)) {
         pr = lastSwapped.r; pc = lastSwapped.c;
       }
       newSpecials.push({ r: pr, c: pc, kind: 'glowing', gemType });
