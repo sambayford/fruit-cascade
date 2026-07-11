@@ -1421,8 +1421,25 @@ async function trySwap(r1, c1, r2, c2) {
 // ── Hint ───────────────────────────────────────────────────────────────────
 
 // ── Auto-hint (free idle nudge) ─────────────────────────────────────────────
-// If the player hasn't made a match in 10s, shake the lowest valid swap on
-// the board.
+// If the player hasn't made a match in 10s, shake a valid swap on the board:
+// prefer a swap that creates a match of 4+ (a special candy opportunity),
+// falling back to the lowest 3-match if no such opportunity exists.
+
+function findBigMatch() {
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const pairs = [[r, c, r, c+1], [r, c, r+1, c]];
+      for (const [r1, c1, r2, c2] of pairs) {
+        if (r2 >= ROWS || c2 >= COLS) continue;
+        swapCells(r1, c1, r2, c2);
+        const big = getMatchGroups().groups.some(g => g.len >= 4);
+        swapCells(r1, c1, r2, c2);
+        if (big) return [r1, c1, r2, c2];
+      }
+    }
+  }
+  return null;
+}
 
 function findLowestMatch() {
   for (let r = ROWS - 1; r >= 0; r--) {
@@ -1448,7 +1465,7 @@ function autoHint() {
     resetIdleTimer();
     return;
   }
-  const found = findLowestMatch();
+  const found = findBigMatch() || findLowestMatch();
   if (found) {
     const [r1, c1, r2, c2] = found;
     [cell(r1, c1), cell(r2, c2)].forEach(el => {
