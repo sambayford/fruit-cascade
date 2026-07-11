@@ -1423,7 +1423,13 @@ async function trySwap(r1, c1, r2, c2) {
 // ── Auto-hint (free idle nudge) ─────────────────────────────────────────────
 // If the player hasn't made a match in 10s, shake a valid swap on the board:
 // prefer a swap that creates a match of 4+ (a special candy opportunity),
-// falling back to the lowest 3-match if no such opportunity exists.
+// falling back to the lowest 3-match if no such opportunity exists. Matches
+// of a fruit type that's already hit its target are skipped — no point
+// nudging the player toward fruit they don't need anymore.
+
+function fruitStillNeeded(gemType) {
+  return (fruitCollected[gemType] || 0) < (fruitTargets[gemType] || 0);
+}
 
 function findBigMatch() {
   for (let r = 0; r < ROWS; r++) {
@@ -1432,7 +1438,7 @@ function findBigMatch() {
       for (const [r1, c1, r2, c2] of pairs) {
         if (r2 >= ROWS || c2 >= COLS) continue;
         swapCells(r1, c1, r2, c2);
-        const big = getMatchGroups().groups.some(g => g.len >= 4);
+        const big = getMatchGroups().groups.some(g => g.len >= 4 && fruitStillNeeded(g.gemType));
         swapCells(r1, c1, r2, c2);
         if (big) return [r1, c1, r2, c2];
       }
@@ -1448,7 +1454,7 @@ function findLowestMatch() {
       for (const [r1, c1, r2, c2] of pairs) {
         if (r2 >= ROWS || c2 >= COLS) continue;
         swapCells(r1, c1, r2, c2);
-        const ok = getMatches().length > 0;
+        const ok = getMatchGroups().groups.some(g => fruitStillNeeded(g.gemType));
         swapCells(r1, c1, r2, c2);
         if (ok) return [r1, c1, r2, c2];
       }
