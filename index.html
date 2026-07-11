@@ -1076,6 +1076,18 @@ function collectClear(initialCells) {
   return [...toNull].map(idx => [Math.floor(idx/COLS), idx%COLS]);
 }
 
+// Returns whichever of the two cells the player just swapped (if either) is
+// present in `cells`, or null. lastSwapped tracks both cells of the swap —
+// the match can form through either one depending on which fruit ended up
+// completing the run.
+function swappedCellIn(cells) {
+  if (!lastSwapped) return null;
+  for (const sw of lastSwapped) {
+    if (cells.some(([r, c]) => r === sw.r && c === sw.c)) return sw;
+  }
+  return null;
+}
+
 // Returns the cell in `cells` nearest the geometric centroid of the group —
 // used to place a new special candy in the "middle" of a match shape when it
 // wasn't the player's own swap that created it (e.g. a cascade/chain match).
@@ -1122,9 +1134,11 @@ async function cascade(combo) {
           // Default: the cell closest to the middle of the whole L/T shape.
           let [pr, pc] = closestToMiddle(allLCells);
           // If the player's own swap directly created this match, the glowing
-          // candy always lands on the cell they moved instead.
-          if (combo === 1 && lastSwapped && allLCells.some(([r,c]) => r === lastSwapped.r && c === lastSwapped.c)) {
-            pr = lastSwapped.r; pc = lastSwapped.c;
+          // candy always lands on whichever of the two swapped cells is part
+          // of this match.
+          if (combo === 1) {
+            const sw = swappedCellIn(allLCells);
+            if (sw) { pr = sw.r; pc = sw.c; }
           }
           newSpecials.push({ r: pr, c: pc, kind: 'glowing', gemType: a.gemType });
           usedGroups.add(i);
@@ -1143,9 +1157,11 @@ async function cascade(combo) {
       // Default: pivot is already the middle cell of the straight run.
       let pr = pivot[0], pc = pivot[1];
       // If the player's own swap directly created this match, the glowing
-      // candy always lands on the cell they moved instead.
-      if (combo === 1 && lastSwapped && cells.some(([r,c]) => r === lastSwapped.r && c === lastSwapped.c)) {
-        pr = lastSwapped.r; pc = lastSwapped.c;
+      // candy always lands on whichever of the two swapped cells is part of
+      // this match.
+      if (combo === 1) {
+        const sw = swappedCellIn(cells);
+        if (sw) { pr = sw.r; pc = sw.c; }
       }
       newSpecials.push({ r: pr, c: pc, kind: 'glowing', gemType });
     }
@@ -1468,7 +1484,7 @@ async function trySwap(r1, c1, r2, c2) {
 
   moves--;
   movesUsed++;
-  lastSwapped = { r: r2, c: c2 };
+  lastSwapped = [{ r: r1, c: c1 }, { r: r2, c: c2 }];
   render();           // board now shows swapped state
   currentCascadeDepth = 0;
   await cascade(1);   // finds & clears matches, drops, fills, repeats
