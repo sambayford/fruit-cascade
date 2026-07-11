@@ -385,6 +385,21 @@
     }
     #settings-btn:active { transform: scale(0.92); }
 
+    #scores-btn {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      font-size: 1.3rem;
+      background: none;
+      border: none;
+      color: var(--dim);
+      cursor: pointer;
+      padding: 6px;
+      line-height: 1;
+      z-index: 5;
+    }
+    #scores-btn:active { transform: scale(0.92); }
+
     #settings-overlay {
       position: fixed;
       inset: 0;
@@ -426,6 +441,25 @@
       background: rgba(255,255,255,0.05);
       border-color: var(--border);
       color: var(--dim);
+    }
+
+    #scores-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    #scores-overlay.show { opacity: 1; pointer-events: all; }
+    .stat-value {
+      font-family: 'Cinzel Decorative', cursive;
+      color: var(--gold-glow);
+      font-size: 1rem;
     }
 
     /* Toast */
@@ -689,6 +723,7 @@
   <header>
     <h1>Fruit Cascade</h1>
     <p>Match · Splash · Munch</p>
+    <button id="scores-btn" aria-label="Scores">🏆</button>
     <button id="settings-btn" aria-label="Settings">⚙️</button>
   </header>
 
@@ -757,6 +792,25 @@
   </div>
 </div>
 
+<div id="scores-overlay">
+  <div class="overlay-card">
+    <div class="overlay-title">Scores</div>
+    <div class="settings-row">
+      <span>Longest Win Streak</span>
+      <span class="stat-value" id="stat-win-streak">0</span>
+    </div>
+    <div class="settings-row">
+      <span>Most Moves Left on a Win</span>
+      <span class="stat-value" id="stat-moves-left">0</span>
+    </div>
+    <div class="settings-row">
+      <span>Longest Cascade</span>
+      <span class="stat-value" id="stat-cascade">0</span>
+    </div>
+    <button class="overlay-btn" id="scores-close-btn" style="margin-top:20px">Done</button>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -772,7 +826,7 @@ let special = []; // parallel board: null | 'glowing'
 let level = 1, moves = 5, baseMoves = 5, movesUsed = 0, bestLevel = 1;
 let lastSwapped = null;
 let fruitTargets = [], fruitCollected = [];
-let selected = null, busy = false, touchStart = null, idleTimer = null;
+let selected = null, busy = false, touchStart = null, idleTimer = null, currentCascadeDepth = 0;
 
 const boardEl     = document.getElementById('board');
 const movesUsedEl = document.getElementById('moves-used-val');
@@ -1035,6 +1089,7 @@ function collectClear(initialCells) {
 async function cascade(combo) {
   const { groups, allCells } = getMatchGroups();
   if (!allCells.length) return;
+  currentCascadeDepth = combo;
 
   // Determine which cells to clear (including special chain reactions)
   const clearCells = collectClear(allCells);
@@ -1404,7 +1459,9 @@ async function trySwap(r1, c1, r2, c2) {
   movesUsed++;
   lastSwapped = { r: r2, c: c2 };
   render();           // board now shows swapped state
+  currentCascadeDepth = 0;
   await cascade(1);   // finds & clears matches, drops, fills, repeats
+  recordCascade(currentCascadeDepth);
   lastSwapped = null;
 
   if (!hasValidMove()) { shuffleBoard(); render(); }
@@ -1503,8 +1560,9 @@ function findLowestMatch() {
 function autoHint() {
   const tutorialEl = document.getElementById('tutorial-overlay');
   const settingsEl = document.getElementById('settings-overlay');
+  const scoresEl   = document.getElementById('scores-overlay');
   if (busy || overlay.classList.contains('show') || tutorialEl.classList.contains('show') ||
-      settingsEl.classList.contains('show') || document.hidden) {
+      settingsEl.classList.contains('show') || scoresEl.classList.contains('show') || document.hidden) {
     resetIdleTimer();
     return;
   }
@@ -1526,6 +1584,67 @@ function resetIdleTimer() {
 }
 
 document.addEventListener('visibilitychange', () => { if (!document.hidden) resetIdleTimer(); });
+
+// ── Scores (stats page) ─────────────────────────────────────────────────────
+
+const STATS_KEY = 'fruitCascade_stats';
+let stats = { maxWinStreak: 0, winStreak: 0, maxMovesLeftOnWin: 0, longestCascade: 0 };
+
+function loadStats() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STATS_KEY) || 'null');
+    if (s) {
+      stats = {
+        maxWinStreak:      s.maxWinStreak      ?? 0,
+        winStreak:         s.winStreak         ?? 0,
+        maxMovesLeftOnWin: s.maxMovesLeftOnWin ?? 0,
+        longestCascade:    s.longestCascade    ?? 0,
+      };
+    }
+  } catch(e) {}
+}
+
+function saveStats() {
+  try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch(e) {}
+}
+
+function recordWin(movesLeft) {
+  stats.winStreak++;
+  if (stats.winStreak > stats.maxWinStreak) stats.maxWinStreak = stats.winStreak;
+  if (movesLeft > stats.maxMovesLeftOnWin)  stats.maxMovesLeftOnWin = movesLeft;
+  saveStats();
+}
+
+function recordLoss() {
+  stats.winStreak = 0;
+  saveStats();
+}
+
+function recordCascade(depth) {
+  if (depth > stats.longestCascade) {
+    stats.longestCascade = depth;
+    saveStats();
+  }
+}
+
+function updateScoresUI() {
+  document.getElementById('stat-win-streak').textContent = stats.maxWinStreak;
+  document.getElementById('stat-moves-left').textContent = stats.maxMovesLeftOnWin;
+  document.getElementById('stat-cascade').textContent    = stats.longestCascade;
+}
+
+function openScores() {
+  updateScoresUI();
+  document.getElementById('scores-overlay').classList.add('show');
+}
+
+function closeScores() {
+  document.getElementById('scores-overlay').classList.remove('show');
+  resetIdleTimer();
+}
+
+document.getElementById('scores-btn').addEventListener('click', openScores);
+document.getElementById('scores-close-btn').addEventListener('click', closeScores);
 
 // ── Settings (audio / haptics toggles) ──────────────────────────────────────
 
@@ -1629,6 +1748,7 @@ function checkBestLevel() {
 function showLevelComplete() {
   sfxLevelComplete();
   const isNew = checkBestLevel();
+  recordWin(moves);
   document.getElementById('ol-title').textContent = 'Level Complete!';
   document.getElementById('ol-moves').textContent = movesUsed + ' move' + (movesUsed === 1 ? '' : 's') + ' used';
   document.getElementById('ol-hiscore-wrap').style.display = isNew ? 'block' : 'none';
@@ -1653,6 +1773,7 @@ function retryLevel() {
 
 function showGameOver() {
   sfxGameOver();
+  recordLoss();
   document.getElementById('ol-title').textContent = 'No More Moves';
   document.getElementById('ol-moves').textContent = movesUsed + ' move' + (movesUsed === 1 ? '' : 's') + ' used';
   document.getElementById('ol-hiscore-wrap').style.display = 'none';
@@ -1798,6 +1919,7 @@ function sfxSpecialActivate() {
 }
 
 loadSettings();
+loadStats();
 loadBestLevel();
 if (loadGame()) render();
 else { initTargets(); newBoard(); render(); }
