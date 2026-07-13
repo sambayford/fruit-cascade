@@ -1656,9 +1656,17 @@ function saveStats() {
 
 function recordWin(movesLeft) {
   stats.winStreak++;
-  if (stats.winStreak > stats.maxWinStreak) stats.maxWinStreak = stats.winStreak;
-  if (movesLeft > stats.maxMovesLeftOnWin)  stats.maxMovesLeftOnWin = movesLeft;
+  const messages = [];
+  if (stats.winStreak > stats.maxWinStreak) {
+    stats.maxWinStreak = stats.winStreak;
+    messages.push('🏆 New win streak record: ' + stats.maxWinStreak + '!');
+  }
+  if (movesLeft > stats.maxMovesLeftOnWin) {
+    stats.maxMovesLeftOnWin = movesLeft;
+    messages.push('🏆 New record: ' + movesLeft + ' moves left on a win!');
+  }
   saveStats();
+  if (messages.length) showToast(messages.join(' '));
 }
 
 function recordLoss() {
@@ -1670,6 +1678,7 @@ function recordCascade(depth) {
   if (depth > stats.longestCascade) {
     stats.longestCascade = depth;
     saveStats();
+    showToast('🏆 New longest cascade record: ' + depth + 'x!');
   }
 }
 
