@@ -1182,7 +1182,9 @@ async function cascade(combo) {
             const sw = swappedCellIn(allLCells);
             if (sw) { pr = sw.r; pc = sw.c; }
           }
-          newSpecials.push({ r: pr, c: pc, kind: 'glowing', gemType: a.gemType });
+          // L/T shapes are always 5+ combined cells, so they get the same
+          // red-glowing (5x5 clear) special as a straight 5+ match.
+          newSpecials.push({ r: pr, c: pc, kind: 'redGlow', gemType: a.gemType });
           usedGroups.add(i);
           usedGroups.add(j);
         }
