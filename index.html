@@ -635,6 +635,22 @@
         transform: scale(1.12);
       }
     }
+
+    /* Special (red glowing) fruit — 5+ match, clears a 5x5 area when matched */
+    .gem.glowing-red {
+      animation: glow-pulse-red 0.9s ease-in-out infinite alternate;
+      border-radius: 50%;
+    }
+    @keyframes glow-pulse-red {
+      from {
+        filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 8px currentColor);
+        transform: scale(1);
+      }
+      to {
+        filter: drop-shadow(0 0 10px #fff) drop-shadow(0 0 20px #ff4d4d) drop-shadow(0 0 30px #b0000f);
+        transform: scale(1.12);
+      }
+    }
     /* Special fruit — also hide gem, flying clone carries the visual */
     .cell.matching-special .gem { visibility: hidden; }
 
@@ -831,7 +847,7 @@ const SAVE_KEY = 'fruitCascade_save';
 const BEST_KEY = 'fruitCascade_best';
 
 let board = [];
-let special = []; // parallel board: null | 'glowing'
+let special = []; // parallel board: null | 'glowing' | 'redGlow'
 let level = 1, moves = 5, baseMoves = 5, movesUsed = 0, bestLevel = 1;
 let lastSwapped = null;
 let fruitTargets = [], fruitCollected = [];
@@ -1037,7 +1053,8 @@ function render(newCells = new Set()) {
         const gem = document.createElement('div');
         gem.className = 'gem gem-' + g;
         gem.textContent = GEM_EMOJI[g];
-        if (special[r] && special[r][c]) gem.classList.add('glowing');
+        if (special[r] && special[r][c] === 'glowing') gem.classList.add('glowing');
+        else if (special[r] && special[r][c] === 'redGlow') gem.classList.add('glowing-red');
         if (newCells.has(r * COLS + c)) div.classList.add('drop-in');
         div.appendChild(gem);
       } else {
@@ -1089,6 +1106,12 @@ function collectClear(initialCells) {
       for (let rr = 0; rr < ROWS; rr++)
         for (let cc = 0; cc < COLS; cc++)
           if (board[rr][cc] === gemType)
+            queue.push([rr, cc]);
+    } else if (sp === 'redGlow') {
+      // Clear every fruit in the 5x5 area centered on this cell
+      for (let rr = r - 2; rr <= r + 2; rr++)
+        for (let cc = c - 2; cc <= c + 2; cc++)
+          if (rr >= 0 && rr < ROWS && cc >= 0 && cc < COLS && board[rr][cc] != null)
             queue.push([rr, cc]);
     }
   }
@@ -1182,7 +1205,11 @@ async function cascade(combo) {
         const sw = swappedCellIn(cells);
         if (sw) { pr = sw.r; pc = sw.c; }
       }
-      newSpecials.push({ r: pr, c: pc, kind: 'glowing', gemType });
+      // 5+ in a row creates a red-glowing candy (clears a 5x5 area when
+      // later matched); exactly 4 creates the regular glowing candy
+      // (clears all fruit of that type when later matched).
+      const kind = len >= 5 ? 'redGlow' : 'glowing';
+      newSpecials.push({ r: pr, c: pc, kind, gemType });
     }
   }
 
@@ -1210,7 +1237,7 @@ async function cascade(combo) {
   const capturedTypes = flyCells.map(([r,c]) => board[r][c] ?? 0);
 
   // Sound effect — special activations get bigger sound
-  const hasSpecialClear = clearCells.some(([r,c]) => special[r][c] === 'glowing');
+  const hasSpecialClear = clearCells.some(([r,c]) => special[r][c] === 'glowing' || special[r][c] === 'redGlow');
   if (hasSpecialClear) sfxSpecialActivate(); else sfxMatch(combo);
 
   // Hide matched cells — but NOT pivot cells (they stay visible and become glowing)
@@ -1220,12 +1247,12 @@ async function cascade(combo) {
     if (!el) return;
     el.classList.add(special[r][c] ? 'matching-special' : 'matching');
   });
-  // Immediately mark pivot cells as glowing
-  if (pivotSet.size > 0) sfxGlowing();
-  pivotSet.forEach(key => {
-    const r = Math.floor(key/COLS), c = key%COLS;
-    const el = cell(r, c);
-    if (el) el.querySelector('.gem')?.classList.add('glowing');
+  // Immediately mark pivot cells as glowing (correct color per special kind)
+  if (newSpecials.length > 0) sfxGlowing();
+  newSpecials.forEach(ns => {
+    const el = cell(ns.r, ns.c);
+    const gemEl = el && el.querySelector('.gem');
+    if (gemEl) gemEl.classList.add(ns.kind === 'redGlow' ? 'glowing-red' : 'glowing');
   });
 
   // All non-pivot cells fly to the monkey
@@ -1536,11 +1563,13 @@ function fruitStillNeeded(gemType) {
 }
 
 function findGlowingMatch() {
-  // Positions of all currently-glowing candies on the board.
+  // Positions of all currently-glowing candies on the board (both regular
+  // and red/5x5 kinds).
   const glowSet = new Set();
   for (let rr = 0; rr < ROWS; rr++) {
     for (let cc = 0; cc < COLS; cc++) {
-      if (special[rr][cc] === 'glowing') glowSet.add(rr * COLS + cc);
+      const sp = special[rr][cc];
+      if (sp === 'glowing' || sp === 'redGlow') glowSet.add(rr * COLS + cc);
     }
   }
   if (glowSet.size === 0) return null; // nothing glowing — skip this tier
@@ -1558,8 +1587,9 @@ function findGlowingMatch() {
         const postGlow = new Set(glowSet);
         const p1 = r1 * COLS + c1, p2 = r2 * COLS + c2;
         postGlow.delete(p1); postGlow.delete(p2);
-        if (special[r1][c1] === 'glowing') postGlow.add(p1);
-        if (special[r2][c2] === 'glowing') postGlow.add(p2);
+        const sp1 = special[r1][c1], sp2 = special[r2][c2];
+        if (sp1 === 'glowing' || sp1 === 'redGlow') postGlow.add(p1);
+        if (sp2 === 'glowing' || sp2 === 'redGlow') postGlow.add(p2);
         const clearsGlowing = getMatchGroups().groups.some(g =>
           fruitStillNeeded(g.gemType) && g.cells.some(([rr, cc]) => postGlow.has(rr * COLS + cc))
         );
