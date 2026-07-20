@@ -1109,10 +1109,10 @@ function collectClear(initialCells) {
           if (board[rr][cc] === gemType)
             queue.push([rr, cc]);
     } else if (sp === 'redGlow') {
-      // Clear every fruit in the 5x5 area centered on this cell
-      for (let rr = r - 2; rr <= r + 2; rr++)
-        for (let cc = c - 2; cc <= c + 2; cc++)
-          if (rr >= 0 && rr < ROWS && cc >= 0 && cc < COLS && board[rr][cc] != null)
+      // Clear the entire board
+      for (let rr = 0; rr < ROWS; rr++)
+        for (let cc = 0; cc < COLS; cc++)
+          if (board[rr][cc] != null)
             queue.push([rr, cc]);
     }
   }
