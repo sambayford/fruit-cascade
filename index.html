@@ -1413,12 +1413,16 @@ function flyFruitToMonkey(clearCells, capturedTypes) {
   const destX = mRect.left + mRect.width / 2;
   const destY = mRect.top  + mRect.height / 2;
 
-  const SPEED   = 0.9; // px per ms — constant travel speed
-  const STAGGER = 60;  // ms between each fruit launch
-  const maxFly  = Math.min(clearCells.length, 12);
+  const SPEED    = 0.9; // px per ms — constant travel speed
+  const count    = clearCells.length;
+  // For small clears, a fixed stagger reads nicely. For big clears (e.g. the
+  // red special's whole-board clear), spread launches over a bounded window
+  // instead so it doesn't take forever, while still animating every fruit —
+  // no cap on how many actually fly.
+  const STAGGER  = count > 20 ? Math.max(500 / count, 8) : 60;
   let latestArrival = 0;
 
-  clearCells.slice(0, maxFly).forEach(([r, c], idx) => {
+  clearCells.forEach(([r, c], idx) => {
     const el = cell(r, c);
     if (!el) return;
     const cRect  = el.getBoundingClientRect();
