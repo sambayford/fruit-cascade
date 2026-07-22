@@ -817,6 +817,14 @@
       <span>Hints</span>
       <button class="toggle-btn" id="toggle-hints">On</button>
     </div>
+    <div class="settings-row">
+      <span>Progress</span>
+      <div style="display:flex; gap:8px;">
+        <button class="toggle-btn" id="download-progress-btn">Download</button>
+        <button class="toggle-btn" id="upload-progress-btn">Upload</button>
+      </div>
+    </div>
+    <input type="file" id="upload-progress-input" accept="application/json" style="display:none">
     <button class="overlay-btn" id="settings-close-btn" style="margin-top:20px">Done</button>
   </div>
 </div>
@@ -1838,6 +1846,61 @@ document.getElementById('toggle-hints').addEventListener('click', () => {
   saveSettings();
   updateSettingsUI();
   resetIdleTimer();
+});
+
+// ── Progress download / upload ──────────────────────────────────────────────
+// Bundles every localStorage key this game uses so it can be backed up and
+// restored on the same or a different device.
+const PROGRESS_KEYS = [SAVE_KEY, STATS_KEY, SETTINGS_KEY, 'fruitCascade_tutorialSeen'];
+
+function downloadProgress() {
+  const bundle = {};
+  for (const key of PROGRESS_KEYS) {
+    const val = localStorage.getItem(key);
+    if (val !== null) bundle[key] = val;
+  }
+  const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = 'fruit-cascade-progress-' + date + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Progress downloaded!');
+}
+
+function uploadProgress(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const bundle = JSON.parse(reader.result);
+      // Basic sanity check — must contain at least one of our keys.
+      const hasKnownKey = PROGRESS_KEYS.some(key => key in bundle);
+      if (!hasKnownKey) throw new Error('not a Fruit Cascade progress file');
+      for (const key of PROGRESS_KEYS) {
+        if (key in bundle) localStorage.setItem(key, bundle[key]);
+      }
+      showToast('Progress restored! Reloading…');
+      setTimeout(() => location.reload(), 1200);
+    } catch (e) {
+      showToast('Couldn\u2019t read that file — is it a Fruit Cascade progress file?');
+    }
+  };
+  reader.onerror = () => showToast('Couldn\u2019t read that file.');
+  reader.readAsText(file);
+}
+
+document.getElementById('download-progress-btn').addEventListener('click', downloadProgress);
+document.getElementById('upload-progress-btn').addEventListener('click', () => {
+  document.getElementById('upload-progress-input').click();
+});
+document.getElementById('upload-progress-input').addEventListener('change', (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (file) uploadProgress(file);
+  e.target.value = ''; // allow re-selecting the same file later
 });
 
 // ── Overlays ───────────────────────────────────────────────────────────────
