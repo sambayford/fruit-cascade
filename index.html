@@ -781,7 +781,6 @@
   <div class="overlay-card">
     <div class="overlay-title" id="ol-title">Level Complete!</div>
     <div class="overlay-moves" id="ol-moves"></div>
-    <div id="ol-hiscore-wrap" style="font-size:0.7rem;color:var(--gold);letter-spacing:0.12em;margin:4px 0 16px;display:none">🏆 New Best Level!</div>
     <button class="overlay-btn" id="ol-btn">Next Level</button>
   </div>
 </div>
@@ -814,6 +813,10 @@
       <span>Dark Mode</span>
       <button class="toggle-btn" id="toggle-darkmode">On</button>
     </div>
+    <div class="settings-row">
+      <span>Hints</span>
+      <button class="toggle-btn" id="toggle-hints">On</button>
+    </div>
     <button class="overlay-btn" id="settings-close-btn" style="margin-top:20px">Done</button>
   </div>
 </div>
@@ -845,11 +848,10 @@ const GEM_TYPES = 6;
 const GEM_EMOJI = ['🍉','🍇','🍏','🍌','🍊','🍓'];
 
 const SAVE_KEY = 'fruitCascade_save';
-const BEST_KEY = 'fruitCascade_best';
 
 let board = [];
 let special = []; // parallel board: null | 'glowing' | 'redGlow'
-let level = 1, moves = 5, baseMoves = 5, movesUsed = 0, bestLevel = 1;
+let level = 1, moves = 5, baseMoves = 5, movesUsed = 0;
 let lastSwapped = null;
 let fruitTargets = [], fruitCollected = [];
 let selected = null, busy = false, touchStart = null, idleTimer = null, currentCascadeDepth = 0;
@@ -1644,7 +1646,7 @@ function autoHint() {
   const tutorialEl = document.getElementById('tutorial-overlay');
   const settingsEl = document.getElementById('settings-overlay');
   const scoresEl   = document.getElementById('scores-overlay');
-  if (busy || overlay.classList.contains('show') || tutorialEl.classList.contains('show') ||
+  if (!settings.hints || busy || overlay.classList.contains('show') || tutorialEl.classList.contains('show') ||
       settingsEl.classList.contains('show') || scoresEl.classList.contains('show') || document.hidden) {
     resetIdleTimer();
     return;
@@ -1741,12 +1743,12 @@ document.getElementById('scores-close-btn').addEventListener('click', closeScore
 // ── Settings (audio / haptics toggles) ──────────────────────────────────────
 
 const SETTINGS_KEY = 'fruitCascade_settings';
-let settings = { audio: true, haptics: true, darkMode: true };
+let settings = { audio: true, haptics: true, darkMode: true, hints: true };
 
 function loadSettings() {
   try {
     const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
-    if (s) settings = { audio: s.audio !== false, haptics: s.haptics !== false, darkMode: s.darkMode !== false };
+    if (s) settings = { audio: s.audio !== false, haptics: s.haptics !== false, darkMode: s.darkMode !== false, hints: s.hints !== false };
   } catch(e) {}
 }
 
@@ -1788,12 +1790,15 @@ function updateSettingsUI() {
   const audioBtn    = document.getElementById('toggle-audio');
   const hapticsBtn  = document.getElementById('toggle-haptics');
   const darkModeBtn = document.getElementById('toggle-darkmode');
+  const hintsBtn    = document.getElementById('toggle-hints');
   audioBtn.textContent   = settings.audio   ? 'On' : 'Off';
   audioBtn.classList.toggle('off', !settings.audio);
   hapticsBtn.textContent = settings.haptics ? 'On' : 'Off';
   hapticsBtn.classList.toggle('off', !settings.haptics);
   darkModeBtn.textContent = settings.darkMode ? 'On' : 'Off';
   darkModeBtn.classList.toggle('off', !settings.darkMode);
+  hintsBtn.textContent = settings.hints ? 'On' : 'Off';
+  hintsBtn.classList.toggle('off', !settings.hints);
 }
 
 function openSettings() {
@@ -1828,6 +1833,12 @@ document.getElementById('toggle-darkmode').addEventListener('click', () => {
   updateSettingsUI();
   applyTheme();
 });
+document.getElementById('toggle-hints').addEventListener('click', () => {
+  settings.hints = !settings.hints;
+  saveSettings();
+  updateSettingsUI();
+  resetIdleTimer();
+});
 
 // ── Overlays ───────────────────────────────────────────────────────────────
 
@@ -1845,18 +1856,11 @@ function closeTutorial() {
 
 document.getElementById('tutorial-btn').addEventListener('click', closeTutorial);
 
-function checkBestLevel() {
-  if (level > bestLevel) { bestLevel = level; saveBestLevel(); return true; }
-  return false;
-}
-
 function showLevelComplete() {
   sfxLevelComplete();
-  const isNew = checkBestLevel();
   recordWin(moves);
   document.getElementById('ol-title').textContent = 'Level Complete!';
   document.getElementById('ol-moves').textContent = movesUsed + ' move' + (movesUsed === 1 ? '' : 's') + ' used';
-  document.getElementById('ol-hiscore-wrap').style.display = isNew ? 'block' : 'none';
   document.getElementById('ol-btn').textContent   = 'Next Level ›';
   document.getElementById('ol-btn').onclick       = nextLevel;
   overlay.classList.add('show');
@@ -1881,7 +1885,6 @@ function showGameOver() {
   recordLoss();
   document.getElementById('ol-title').textContent = 'No More Moves';
   document.getElementById('ol-moves').textContent = movesUsed + ' move' + (movesUsed === 1 ? '' : 's') + ' used';
-  document.getElementById('ol-hiscore-wrap').style.display = 'none';
   document.getElementById('ol-btn').textContent   = 'Try Again';
   document.getElementById('ol-btn').onclick       = retryLevel;
   overlay.classList.add('show');
@@ -1931,8 +1934,6 @@ function loadGame() {
 }
 
 function clearSave()    { try { localStorage.removeItem(SAVE_KEY); } catch(e) {} }
-function saveBestLevel() { try { localStorage.setItem(BEST_KEY, bestLevel); } catch(e) {} }
-function loadBestLevel() { try { bestLevel = parseInt(localStorage.getItem(BEST_KEY) || '1', 10) || 1; } catch(e) {} }
 
 // ── Boot ───────────────────────────────────────────────────────────────────
 
@@ -2026,7 +2027,6 @@ function sfxSpecialActivate() {
 loadSettings();
 applyTheme();
 loadStats();
-loadBestLevel();
 if (loadGame()) render();
 else { initTargets(); newBoard(); render(); }
 document.getElementById('monkey').classList.add('idle');
