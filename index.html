@@ -426,6 +426,19 @@
       color: var(--text);
     }
     .settings-row:last-of-type { border-bottom: none; }
+    .settings-row.stacked {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+    .settings-row.stacked .stacked-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    .settings-row.stacked .stacked-buttons .toggle-btn {
+      flex: 1;
+      min-width: 0;
+    }
     .toggle-btn {
       min-width: 56px;
       padding: 6px 14px;
@@ -817,9 +830,9 @@
       <span>Hints</span>
       <button class="toggle-btn" id="toggle-hints">On</button>
     </div>
-    <div class="settings-row">
+    <div class="settings-row stacked">
       <span>Progress</span>
-      <div style="display:flex; gap:8px;">
+      <div class="stacked-buttons">
         <button class="toggle-btn" id="download-progress-btn">Download</button>
         <button class="toggle-btn" id="upload-progress-btn">Upload</button>
       </div>
