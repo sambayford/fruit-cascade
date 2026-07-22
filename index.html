@@ -1867,22 +1867,31 @@ document.getElementById('toggle-hints').addEventListener('click', () => {
 const PROGRESS_KEYS = [SAVE_KEY, STATS_KEY, SETTINGS_KEY, 'fruitCascade_tutorialSeen'];
 
 function downloadProgress() {
-  const bundle = {};
-  for (const key of PROGRESS_KEYS) {
-    const val = localStorage.getItem(key);
-    if (val !== null) bundle[key] = val;
+  try {
+    const bundle = {};
+    for (const key of PROGRESS_KEYS) {
+      const val = localStorage.getItem(key);
+      if (val !== null) bundle[key] = val;
+    }
+    const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const date = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = 'fruit-cascade-progress-' + date + '.json';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    // Revoking the object URL immediately can abort the download on some
+    // mobile browsers before it actually starts — give it a moment first.
+    setTimeout(() => {
+      a.remove();
+      URL.revokeObjectURL(url);
+    }, 1000);
+    showToast('Progress downloaded!');
+  } catch (e) {
+    showToast('Download failed — your browser may be blocking file downloads here.');
   }
-  const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const date = new Date().toISOString().slice(0, 10);
-  a.href = url;
-  a.download = 'fruit-cascade-progress-' + date + '.json';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-  showToast('Progress downloaded!');
 }
 
 function uploadProgress(file) {
