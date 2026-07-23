@@ -1060,6 +1060,72 @@ function dropAndFill() {
   return newCells;
 }
 
+// When no valid move remains mid-game, clear the whole board (same visual
+// effect as matching a red-glowing special) instead of silently shuffling,
+// and let the player know why.
+async function clearStuckBoard() {
+  showToast('No More Matches!');
+
+  const clearCells = [];
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (board[r][c] != null) clearCells.push([r, c]);
+  if (clearCells.length === 0) return;
+
+  const capturedTypes = clearCells.map(([r, c]) => board[r][c] ?? 0);
+
+  sfxSpecialActivate();
+
+  clearCells.forEach(([r, c]) => {
+    const el = cell(r, c);
+    if (!el) return;
+    el.classList.add(special[r][c] ? 'matching-special' : 'matching');
+  });
+
+  const flyDuration = flyFruitToMonkey(clearCells, capturedTypes);
+
+  const pulsedTypes = new Set();
+  clearCells.forEach(([r, c]) => {
+    const g = board[r][c];
+    if (g != null && g >= 0 && g < GEM_TYPES) {
+      fruitCollected[g] = (fruitCollected[g] || 0) + 1;
+      pulsedTypes.add(g);
+    }
+  });
+
+  updateUI();
+
+  pulsedTypes.forEach(g => {
+    const el = document.getElementById('fruit-slot-' + g);
+    if (!el) return;
+    el.classList.remove('pulse');
+    void el.offsetWidth; // reflow to restart animation
+    el.classList.add('pulse');
+    setTimeout(() => el.classList.remove('pulse'), 500);
+  });
+
+  await delay(Math.max(flyDuration - 80, 300));
+  monkeyEat(clearCells, 1, capturedTypes);
+  await delay(180);
+
+  clearCells.forEach(([r, c]) => { board[r][c] = null; special[r][c] = null; });
+  render();
+  await delay(80);
+
+  const fresh = dropAndFill();
+  render(fresh);
+  await delay(380);
+
+  // Safety net: the fresh random fill should already have a valid move, but
+  // fall back to a shuffle in the extremely unlikely case it doesn't.
+  let attempts = 0;
+  while (!hasValidMove() && attempts < 5) {
+    shuffleBoard();
+    render();
+    attempts++;
+  }
+}
+
 // ── Rendering ──────────────────────────────────────────────────────────────
 
 function cell(r, c) { return boardEl.children[r * COLS + c]; }
@@ -1567,7 +1633,7 @@ async function trySwap(r1, c1, r2, c2) {
   recordCascade(currentCascadeDepth);
   lastSwapped = null;
 
-  if (!hasValidMove()) { shuffleBoard(); render(); }
+  if (!hasValidMove()) { await clearStuckBoard(); }
 
   saveGame();
   resetIdleTimer();
